@@ -1,0 +1,2 @@
+http://127.0.0.1:5050/uploads/ is accessible without login
+NOT all APIS are protected by LOGIN , example: /api/student/<int:student_id>/super_badges/notes (http://127.0.0.1:5050//api/student/21/super_badges/notes)

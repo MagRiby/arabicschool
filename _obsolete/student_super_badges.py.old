@@ -1,0 +1,16 @@
+from models import db
+
+# class StudentSuperBadge(db.Model):
+#     __tablename__ = 'student_super_badges'
+#     id = db.Column(db.Integer, primary_key=True)
+#     student_id = db.Column(db.Integer, nullable=False)
+#     super_badge_id = db.Column(db.String(36), nullable=False)
+#     active = db.Column(db.Boolean, default=True)
+
+#     def as_dict(self):
+#         return {
+#             'id': self.id,
+#             'student_id': self.student_id,
+#             'super_badge_id': self.super_badge_id,
+#             'active': self.active
+#         }

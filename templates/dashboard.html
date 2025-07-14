@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة التحكم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <style>
+        /* Scoped calendar button color for Classes Tab only */
+        .class-block .calendar-btn {
+            background-color: #FFC107 !important;
+            color: #212529 !important; /* Keep text readable, matches Bootstrap btn-warning text */
+            border-color: #FFC107 !important;
+        }
+
+        body { background: #f8fafc; }
+        .dashboard-section { background: #fff; border-radius: 1rem; box-shadow: 0 6px 18px #0001; padding: 2rem; margin: 2rem auto; max-width: 700px; }
+        .user-list { margin-top: 1.5rem; }
+        .user-row { border-bottom: 1px solid #eee; padding: 0.5rem 0; }
+        .level-edit-section {
+          background: #fffbe6;
+          border: 1px solid #ffe58f;
+          border-radius: 8px;
+          margin: 12px 0;
+          padding: 18px 16px 10px 16px;
+        }
+        .class-section {
+          background: #e6f7ff;
+          border: 1px solid #91d5ff;
+          border-radius: 8px;
+          margin: 12px 0;
+          padding: 18px 16px 10px 16px;
+        }
+        .subject-item {
+          background: #f6ffed;
+          border: 1px solid #b7eb8f;
+          border-radius: 6px;
+          margin: 6px 0;
+          padding: 8px 12px;
+          display: flex;
+          align-items: center;
+        }
+        .btn-course-add {
+          background: #52c41a;
+          color: #fff;
+          border: none;
+          border-radius: 6px;
+          font-weight: bold;
+          padding: 8px 18px;
+          margin-bottom: 8px;
+          transition: background 0.2s;
+        }
+        .btn-course-add:hover, .btn-course-add:focus {
+          background: #389e0d;
+          color: #fff;
+        }
+        .group-section {
+          background: #e6f7ff;
+          border: 1px solid #91d5ff;
+          border-radius: 8px;
+          margin: 12px 0;
+          padding: 16px 14px 8px 14px;
+        }
+        .btn-level-add {
+          background: #faad14;
+          color: #fff;
+          border: none;
+          border-radius: 6px;
+          font-weight: bold;
+          padding: 10px 18px;
+          transition: background 0.2s;
+        }
+        .btn-level-add:hover, .btn-level-add:focus {
+          background: #d48806;
+          color: #fff;
+        }
+        .level-details-section {
+          background: #fff2e6;
+          border: 1px solid #faad14;
+          border-radius: 8px;
+          margin: 12px 0;
+          padding: 18px 16px 10px  16px;
+        }
+        .level-block {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .group-section .d-flex.align-items-center,
+        .subject-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .group-section .btn,
+        .subject-item .btn {
+          margin-left: 0;
+          margin-right: 0;
+        }
+        /* Make all added items bold */
+        /*
+        Note: The above .class-block .calendar-btn rule ensures only calendar buttons inside class blocks
+        (i.e., in the Classes tab) are affected, without impacting other calendar buttons elsewhere.
+        */
+        .level-name,
+        .group-name,
+        .subject-name {
+          font-weight: bold;
+        }
+        .teacher-card,
+        .level-card,
+        .class-block,
+        .card.mb-2.border-secondary {
+          background: #dcdddf !important;
+          border: 1.5px solid #e0e0e0 !important;
+          border-radius: 8px !important;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+          margin-bottom: 0.5rem !important;
+          padding: 0.5rem 0.75rem !important;
+          min-height: 48px;
+        }
+        .teacher-card .card,
+        .teacher-card .card-body,
+        .level-card .card,
+        .level-card .card-body,
+        .class-block .card,
+        .class-block .card-body,
+        .card.mb-2.border-secondary .card,
+        .card.mb-2.border-secondary .card-body {
+          background: transparent !important;
+          padding: 0 !important;
+        }
+        /* Remove blue background from classes */
+        .class-block, .class-row, .class-card {
+          background: none !important;
+          border: 1px solid #e3e6ea;
+          border-radius: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+        /* Remove blue background and border from classes wrapper */
+        #class-list, .class-list, .class-list-wrapper {
+          background: none !important;
+          border: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+        }
+        /* Force class section background to white */
+        .class-section, .class-list, #class-list, .class-list-wrapper {
+          background: #fff !important;
+        }
+        .class-block {
+  background: #dcdddf !important;
+  border: 1.5px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  margin-bottom: 0.5rem !important;
+  padding: 0.5rem 0.75rem !important;
+  min-height: 48px;
+}
+.class-block .class-details-line {
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+        /* Use the exact yellow shade from your screenshot for the level section header */
+        .level-card-header {
+          background: #FDBB0D !important;
+          color: #222 !important;
+        }
+        /* Override Bootstrap bg-primary to use your yellow */
+        .bg-primary {
+          --bs-bg-opacity: 1;
+          background-color: #FDBB0D !important;
+        }
+        .student-card {
+          background: #dcdddf !important;
+          border: 1.5px solid #e0e0e0 !important;
+          border-radius: 8px !important;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+          margin-bottom: 0.5rem !important;
+          padding: 0.5rem 0.75rem !important;
+          min-height: 48px;
+        }
+        .student-card .card,
+        .student-card .card-body {
+          background: transparent !important;
+          padding: 0 !important;
+        }
+        .student-details {
+          background: #dcdddf !important;
+          border: 1px solid #e0e0e0 !important;
+          border-radius: 8px !important;
+          margin-top: 0.5rem !important;
+          padding: 0.5rem 0.75rem !important;
+        }
+        .trophy-glow {
+          transform-origin: 50% 50%;
+          animation: trophyPulse 0.8s infinite alternate;
+        }
+        @keyframes trophyPulse {
+          0% { opacity: 0.1; }
+          100% { opacity: 1; }
+        }
+        .trophy-icon svg {
+          display: block;
+        }
+        .trophy-tilt {
+          animation: trophy-tilt-anim 1.2s infinite cubic-bezier(.4,0,.2,1) alternate;
+          transform-origin: 50% 80%; /* Pivot from the base */
+        }
+        @keyframes trophy-tilt-anim {
+          0% { transform: rotate(-10deg); }
+          50% { transform: rotate(10deg); }
+          100% { transform: rotate(-10deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="text-center mb-4" style="padding-top: 24px;">
+        <img src="/static/{{ school_info.logo }}" alt="شعار المدرسة" style="max-height: 80px; margin-bottom: 8px;">
+        <h1 style="font-size:2.1rem; font-weight:bold; margin-bottom:0;">{{ school_info.name }}</h1>
+    </div>
+    <div class="dashboard-section">
+        <h2 class="mb-3">لوحة التحكم ({{ username }}, {{ role }})</h2>
+    <a href="/logout" class="btn btn-secondary mb-4">خروج</a>
+        {% if role == 'super_admin' %}
+        <h4>إدارة المستخدمين</h4>
+        <form id="add-user-form" class="row g-2 mb-4">
+            <div class="col-md-4">
+                <input class="form-control" name="username" placeholder="اسم المستخدم" required>
+            </div>
+            <div class="col-md-4">
+                <input class="form-control" name="password" type="password" placeholder="كلمة المرور" required>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="role" required>
+                    <option value="local_admin">مدير محلي</option>
+                    <option value="teacher">معلم</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-success">إضافة</button>
+            </div>
+        </form>
+        <div id="user-list" class="user-list"></div>
+        <!-- Edit/Delete modal -->
+        <div class="modal fade" id="editUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">تعديل المستخدم</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <form id="edit-user-form">
+                    <input type="hidden" name="id">
+                    <div class="mb-2">
+                        <label>الدور:</label>
+                        <select class="form-select" name="role">
+                            <option value="local_admin">مدير محلي</option>
+                            <option value="teacher">معلم</option>
+                            <option value="super_admin">مدير أعلى</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label>كلمة مرور جديدة (اختياري):</label>
+                        <input class="form-control" name="password" type="password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </form>
+            </div>
+        </div></div></div>
+        <!-- Delete confirm modal -->
+        <div class="modal fade" id="deleteUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">حذف المستخدم</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">هل أنت متأكد من حذف هذا المستخدم؟</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">حذف</button>
+            </div>
+        </div></div></div>
+        {% endif %}
+       <!-- {% if role in ['super_admin', 'local_admin', 'teacher'] %} -->
+       {% if role == 'teacher' %}
+        <ul class="nav nav-tabs mb-3" id="adminTab" role="tablist">
+
+
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="classes-tab" data-bs-toggle="tab" data-bs-target="#classes" type="button" role="tab">الصفوف</button>
+          </li>
+        </ul>
+          {% elif role == 'local_admin' %}
+          <ul class="nav nav-tabs mb-3" id="adminTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="classes-tab" data-bs-toggle="tab" data-bs-target="#classes" type="button" role="tab">الصفوف</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="levels-tab" data-bs-toggle="tab" data-bs-target="#levels" type="button" role="tab">المستويات</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="teachers-tab" data-bs-toggle="tab" data-bs-target="#teachers" type="button" role="tab">المعلمون</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">الطلاب</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="other-settings-tab" data-bs-toggle="tab" data-bs-target="#other-settings" type="button" role="tab">إعدادات أخرى</button>
+          </li>
+       
+        </ul>
+        {% endif %}
+        {% if role in ['super_admin', 'local_admin', 'teacher'] %} 
+        <div class="tab-content" id="adminTabContent">
+          <!-- Classes Tab -->
+          <div class="tab-pane fade show active" id="classes" role="tabpanel">
+            {% if role in ['super_admin', 'local_admin'] %}
+            <form id="add-class-form" class="mb-3">
+  <div class="row g-2 mb-1">
+    <div class="col-md-6">
+      <input class="form-control" name="name" placeholder="اسم الصف" required>
+    </div>
+    <div class="col-md-6">
+      <select class="form-select" name="level_id" id="level-select">
+        <option value="">اختر المستوى</option>
+      </select>
+    </div>
+  </div>
+  <div class="row g-2">
+    <div class="col-md-5">
+      <select class="form-select" name="teacher_id" id="teacher-select">
+        <option value="">اختر المعلم</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <select class="form-select" name="backup_teacher_id" id="backup-teacher-select">
+        <option value="">اختر معلم احتياطي</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn btn-success">إضافة صف</button>
+    </div>
+  </div>
+</form>
+            {% endif %}
+            <div id="class-list"></div>
+            <div id="class-details-section" style="display:none;">
+              <hr>
+              <h6>تفاصيل الصف: <span id="current-class-name"></span></h6>
+              <div id="class-level-curriculum-section">
+                <h6>المنهج الخاص بالمستوى</h6>
+                <div id="class-level-curriculum-list"></div>
+              </div>
+              <!-- Add Students -->
+              <form id="add-class-student-form" class="row g-2 mb-3">
+                <div class="col-md-10">
+                  <input class="form-control" name="name" placeholder="اسم الطالب" required>
+                </div>
+                <div class="col-md-2">
+                  <button type="submit" class="btn btn-info w-100">إضافة طالب</button>
+                </div>
+              </form>
+              <div id="class-student-list"></div>
+            </div>
+          </div>
+          <!-- Levels Tab -->
+          <div class="tab-pane fade" id="levels" role="tabpanel">
+            <!-- Add Level Form -->
+            <form id="add-level-form" class="row g-2 mb-3">
+              <div class="col-md-10">
+                <input class="form-control" name="name" placeholder="اسم المستوى" required>
+              </div>
+              <div class="col-md-2">
+                <button type="submit" class="btn btn-warning w-100">إضافة مستوى</button>
+              </div>
+            </form>
+            <div id="levels-container"></div>
+          </div>
+          <!-- Teachers Tab -->
+          <div class="tab-pane fade" id="teachers" role="tabpanel">
+            <form id="add-teacher-form" class="row g-2 mb-3">
+              <div class="col-md-6 mb-2">
+                <input class="form-control" name="username" placeholder="البريد الإلكتروني للمعلم (سيكون اسم المستخدم)" type="email" required>
+              </div>
+              <div class="col-md-6 mb-2">
+                <input class="form-control" name="name" placeholder="اسم المعلم" required>
+              </div>
+              <div class="col-md-6 mb-2">
+                <input class="form-control" name="password" type="password" placeholder="كلمة المرور" required>
+              </div>
+              <div class="col-md-6 mb-2 d-flex align-items-end justify-content-end">
+                <button type="submit" class="btn btn-primary w-100">إضافة</button>
+              </div>
+            </form>
+            <div id="teacher-list"></div>
+          </div>
+          <!-- Students Tab -->
+          <div class="tab-pane fade" id="students" role="tabpanel">
+            <form id="add-student-form" class="row g-2 mb-3">
+              <div class="col-md-3">
+                <input class="form-control" name="username" placeholder="اسم المستخدم للطالب" required>
+              </div>
+              <div class="col-md-3">
+                <input class="form-control" name="name" placeholder="اسم الطالب" required>
+              </div>
+              <div class="col-md-3">
+                <input class="form-control" name="password" type="password" placeholder="كلمة المرور" required>
+              </div>
+              <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">إضافة</button>
+              </div>
+            </form>
+
+            <div class="mb-3">
+              <div class="input-group mb-3">
+                <input id="backend-student-search2" class="form-control" type="text" placeholder="ابحث عن طالب بالاسم أو اسم المستخدم..." autocomplete="off">
+                <div class="input-group-text">
+                  <input id="group-by-class-checkbox" type="checkbox" class="form-check-input ms-2">
+                  <label for="group-by-class-checkbox" class="form-check-label ms-1">تجميع حسب الصف</label>
+                </div>
+              </div>
+            </div>
+            <div id="student-list"></div>
+          </div>
+          <!-- Other Settings Tab -->
+          <div class="tab-pane fade" id="other-settings" role="tabpanel">
+            <a href="/super_badges" class="btn btn-warning mb-3 w-100">شارات مميزة</a>
+            <a href="/manage_local_admins" class="btn btn-warning mb-3 w-100">إدارة المدراء المحليين</a>
+<a href="/school_info" class="btn btn-warning mb-3 w-100">معلومات المدرسة</a>
+            <div class="alert alert-secondary">لا توجد إعدادات أخرى حالياً.</div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Calendar Modal -->
+        <div id="calendarModal" class="modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">التقويم للصف <span id="calendar-class-name"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="class-calendar"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Event Modal -->
+<div id="eventModal" class="modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventModalLabel">إدارة الحدث</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="eventForm">
+          <div class="mb-2">
+            <label class="form-label">عنوان الحدث</label>
+            <input type="text" class="form-control" id="event-title" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">الوصف</label>
+            <textarea class="form-control" id="event-desc"></textarea>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">تاريخ البدء</label>
+            <input type="datetime-local" class="form-control" id="event-start" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">تاريخ الانتهاء</label>
+            <input type="datetime-local" class="form-control" id="event-end">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">اللون</label>
+            <input type="color" class="form-control form-control-color" id="event-color" value="#3788d8">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">تكرار</label>
+            <select class="form-select" id="event-recurrence">
+              <option value="none">بدون تكرار</option>
+              <option value="weekly">أسبوعي</option>
+              <option value="monthly">شهري</option>
+            </select>
+          </div>
+          <div class="mb-2" id="recurrence-end-date-wrapper" style="display:none;">
+            <label class="form-label">تاريخ الانتهاء للتكرار</label>
+            <input type="date" class="form-control" id="event-recurrence-end">
+          </div>
+          <input type="hidden" id="event-id">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="delete-event-btn" style="display:none">حذف</button>
+        <button type="button" class="btn btn-primary" id="save-event-btn">حفظ</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+        </div>
+        {% endif %}
+        <!-- {% if role == 'teacher' %} -->
+        <!-- <h4>إدارة الطلاب</h4> -->
+        <!-- Placeholder for teacher actions -->
+        <!-- <div class="alert alert-info">ميزات المعلم ستظهر هنا.</div> -->
+        <!-- {% endif %} -->
+        <!-- Removed yellow trophy icon as requested -->
+        <!-- Animated Trophy SVG Icon for Top Level -->
+        <!-- Removed yellow trophy icon as requested -->
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script>
+      //console.log('[DEBUG] Dashboard JS script loaded!');
+    document.addEventListener('DOMContentLoaded', function() {
+      //console.log('[DEBUG] DOMContentLoaded fired');
+      try {
+        const searchInput = document.getElementById('backend-student-search2');
+        const groupByCheckbox = document.getElementById('group-by-class-checkbox');
+        if (searchInput && groupByCheckbox) {
+          searchInput.addEventListener('input', fetchAndRenderStudents);
+          groupByCheckbox.addEventListener('change', fetchAndRenderStudents);
+          fetchAndRenderStudents();
+        }
+      } catch (e) {
+        //console.error('[DEBUG] Error setting up event listeners:', e);
+      }
+      {% if role == 'super_admin' %}
+      let usersCache = [];
+      function loadUsers() {
+          fetch('/list_users').then(r => r.json()).then(users => {
+              usersCache = users;
+              let html = users.map(u => `<div class='user-row'><b>${u.username}</b> - <span class='badge bg-primary'>${u.role}</span> <button class='btn btn-sm btn-secondary ms-2' onclick='editUser(${u.id})'>تعديل</button> <button class='btn btn-sm btn-danger' onclick='deleteUser(${u.id})'>حذف</button></div>`).join('');
+              document.getElementById('user-list').innerHTML = html;
+          });
+      }
+      loadUsers();
+      // Add user
+      document.getElementById('add-user-form').onsubmit = function(e) {
+          e.preventDefault();
+          let fd = new FormData(this);
+          fetch('/create_user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  username: fd.get('username'),
+                  password: fd.get('password'),
+                  role: fd.get('role')
+              })
+          }).then(r => r.json()).then(resp => {
+              if(resp.success) {
+                  loadUsers();
+                  this.reset();
+              } else {
+                  alert(resp.error || 'خطأ أثناء إضافة المستخدم');
+              }
+          });
+      };
+      // Edit user logic
+      window.editUser = function(id) {
+          let user = usersCache.find(u => u.id === id);
+          let modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+          let form = document.getElementById('edit-user-form');
+          form.id.value = user.id;
+          form.role.value = user.role;
+          form.password.value = '';
+          modal.show();
+      };
+      document.getElementById('edit-user-form').onsubmit = function(e) {
+          e.preventDefault();
+          let fd = new FormData(this);
+          fetch('/update_user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  id: fd.get('id'),
+                  role: fd.get('role'),
+                  password: fd.get('password')
+              })
+          }).then(r => r.json()).then(resp => {
+              if(resp.success) {
+                  loadUsers();
+                  bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+              } else {
+                  alert(resp.error || 'خطأ أثناء التحديث');
+              }
+          });
+      };
+      // Delete user logic
+      let deleteUserId = null;
+      window.deleteUser = function(id) {
+          deleteUserId = id;
+          let modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+          modal.show();
+      };
+      document.getElementById('confirm-delete-btn').onclick = function() {
+          fetch('/delete_user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: deleteUserId })
+          }).then(r => r.json()).then(resp => {
+              if(resp.success) {
+                  loadUsers();
+                  bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+              } else {
+                  alert(resp.error || 'خطأ أثناء الحذف');
+              }
+          });
+      };
+      {% endif %}
+      {% if role in ['super_admin', 'local_admin', 'teacher'] %}
+      // --- Classes Management ---
+      //console.log('[DEBUG] Dashboard JS loaded. Role:', '{{ role }}');
+function loadClasses() {
+  //console.log('[DEBUG] loadClasses called');
+  fetch('/classes')
+    .then(r => {
+      //console.log('[DEBUG] /classes fetch response:', r);
+      return r.json();
+    })
+    .then(classes => {
+      //console.log('[DEBUG] /classes data:', classes);
+      let html = classes.map(cls => {
+            // Show "لا شيء" if any field is missing
+            const level = cls.level_name || 'لا شيء';
+            const teacher = cls.teacher_name || 'لا شيء';
+            const backup = cls.backup_teacher_name || 'لا شيء';
+            return `
+              <div class="class-block mb-2 p-2 d-flex flex-row align-items-start" style="background:#eee; border-radius:8px;" data-class-id="${cls.id}" data-level-id="${cls.level_id}" data-teacher-id="${cls.teacher_id}" data-backup-id="${cls.backup_teacher_id}">
+                <div class="d-flex flex-column align-items-start" style="min-width:110px;">
+                  {% if role in ['super_admin', 'local_admin'] %}
+                  <button class="btn btn-danger btn-sm mb-1 delete-class-btn">حذف</button>
+                  <button class="btn btn-primary btn-sm mb-1 edit-class-btn">تعديل</button>
+                  {% endif %}
+                  <button class="btn btn-info btn-sm mb-1 show-students-btn">الطلاب</button>
+                  <button class="btn btn-success btn-sm mb-1 calendar-btn" data-class-id="${cls.id}">التقويم</button>
+                  <button class="btn btn-sm mb-1 continuous-monitoring-btn" style="background-color:#ff8800;color:#fff;" data-class-id="${cls.id}">المراقبة المستمرة</button>
+                  <button class="btn btn-sm mb-1 homework-btn" style="background-color: #7bed9f; color: #222;" data-class-id="${cls.id}" data-bs-toggle="modal" data-bs-target="#homeworkModal">واجب منزلي</button>
+                  <button class="btn btn-support-material btn-sm mb-1 w-100" style="background:#a259f7;color:#fff;" onclick="openClassSupportMaterialModal(${cls.id}, ${cls.level_id})">مواد الدعم</button>
+                  <button class="btn btn-pink btn-sm mb-1 w-100 announcement-btn" style="background:#e75480;color:#fff;">إعلان</button>
+                  <button class="btn btn-sm btn-dark attendance-btn mb-1" style="color:#fff;" data-class-id="${cls.id}">الحضور</button>
+                </div>
+                <div class="flex-grow-1 pe-3">
+                  <div class="announcement-ticket-container"></div>
+                  <div class="fw-bold text-end" style="font-size:1.97rem;">
+                    <span style="font-weight:bold;">الصف</span> <span class="class-name">${cls.name}</span>
+                  </div>
+                  <div class="text-end class-details-lines" style="margin-bottom:0; line-height:1.2;">
+                    <div class="class-details-line">المستوى: <span class="fw-bold">${level}</span></div>
+                    <div class="class-details-line">المعلم: <span class="fw-bold">${cls.teacher_name || ''}</span></div>
+                    <div class="class-details-line">معلم احتياطي: <span class="fw-bold">${cls.backup_teacher_name || ''}</span></div>
+                  </div>
+                  <div class="students-list mt-2" style="display:none;"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+          const classList = document.getElementById('class-list');
+          //console.log('[DEBUG] classList:', classList);
+          //console.log('[DEBUG] html:', html);
+          if (classList) {
+            classList.innerHTML = html;
+          }
+          // Render announcement tickets for each class after the HTML is set
+          Array.from(document.querySelectorAll('.class-block')).forEach(function(classBlock) {
+            const classId = classBlock.getAttribute('data-class-id');
+            const ticketContainer = classBlock.querySelector('.announcement-ticket-container');
+            fetch('/api/class/' + classId + '/announcement')
+              .then(r => r.json())
+              .then(data => {
+                function isAnnouncementExpired(expiry) {
+                  if (!expiry) return false;
+                  const now = new Date();
+                  const exp = new Date(expiry);
+                  return now > exp;
+                }
+                if (data && data.success && data.text && !isAnnouncementExpired(data.expiry)) {
+                  const ticket = document.createElement('div');
+                  ticket.className = 'announcement-ticket mb-2';
+                  ticket.style.background = '#ffe0ef';
+                  ticket.style.border = '1.5px solid #e75480';
+                  ticket.style.borderRadius = '10px';
+                  ticket.style.padding = '8px 14px';
+                  ticket.style.fontWeight = 'bold';
+                  ticket.style.color = '#c2185b';
+                  ticket.style.textAlign = 'right';
+                  ticket.style.maxHeight = '60px';
+                  ticket.style.overflowY = 'auto';
+                  ticket.style.wordBreak = 'break-word';
+                  ticket.innerHTML = '<span style="color:#e75480;">إعلان:</span> ' + data.text;
+                  ticketContainer.appendChild(ticket);
+                }
+              });
+          });
+
+          document.querySelectorAll('.continuous-monitoring-btn').forEach(btn => {
+            btn.onclick = function() {
+              const classId = btn.getAttribute('data-class-id');
+              window.open(`/continuous_monitoring/${classId}`, '_blank');
+            };
+          });
+
+          document.querySelectorAll('.attendance-btn').forEach(btn => {
+            btn.onclick = function() {
+              const classId = btn.getAttribute('data-class-id');
+              window.open(`/attendance/${classId}`, '_blank');
+            };
+          });
+
+          document.querySelectorAll('.delete-class-btn').forEach(btn => {
+            btn.onclick = function() {
+              if (!confirm('هل أنت متأكد من حذف هذا الصف؟')) return;
+              const classDiv = this.closest('.class-block');
+              const classId = classDiv.getAttribute('data-class-id');
+              fetch(`/classes/${classId}`, { method: 'DELETE' }).then(r => r.json()).then(resp => {
+                if(resp.success) loadClasses();
+                else alert(resp.error || 'حدث خطأ أثناء حذف الصف');
+              });
+            };
+          });
+
+          document.querySelectorAll('.edit-class-btn').forEach(btn => {
+            btn.onclick = function() {
+              const classDiv = this.closest('.class-block');
+              const nameSpan = classDiv.querySelector('.class-name');
+              const currentName = nameSpan.textContent;
+              // Create the input element
+              const input = document.createElement('input');
+              input.className = 'form-control form-control-sm edit-class-input mb-2';
+              let safeName = '';
+if (nameSpan && nameSpan.tagName === 'SPAN') {
+  // Ideal case: .class-name is a span containing only the class name
+  safeName = nameSpan.textContent.trim();
+} else {
+  // Defensive: try to get the text node after the label
+  const nameDiv = classDiv.querySelector('.class-name');
+  if (nameDiv && nameDiv.childNodes.length > 1 && nameDiv.childNodes[1].nodeType === Node.TEXT_NODE) {
+    safeName = nameDiv.childNodes[1].textContent.trim();
+  } else if (nameDiv) {
+    safeName = nameDiv.textContent.trim();
+  }
+}
+if (safeName.startsWith('الصف ')) {
+  safeName = safeName.slice(5).trim();
+}
+input.value = safeName;
+              //console.log('[DEBUG] Students to render for class', currentName);
+              input.style.display = 'inline-block';
+              input.style.width = 'auto';
+              input.style.maxWidth = '220px';
+              // Replace only the .class-name span with the input
+              nameSpan.replaceWith(input);
+              const nameContainer = input.parentNode; // Should be the same parent as before
+              const currentLevelId = classDiv.getAttribute('data-level-id');
+              const currentTeacherId = classDiv.getAttribute('data-teacher-id');
+              const currentBackupId = classDiv.getAttribute('data-backup-id');
+
+              // Fetch levels and teachers for dropdowns
+              Promise.all([
+                fetch('/levels').then(r => r.json()),
+                fetch('/teachers').then(r => r.json())
+              ]).then(([levels, teachers]) => {
+                // Build dropdowns
+                const levelOptions = levels.map(l => `<option value="${l.id}" ${l.id == currentLevelId ? 'selected' : ''}>${l.name}</option>`).join('');
+                const teacherOptions = teachers.map(t => `<option value="${t.id}" ${t.id == currentTeacherId ? 'selected' : ''}>${t.name || t.username}</option>`).join('');
+                const backupOptions = teachers.map(t => `<option value="${t.id}" ${t.id == currentBackupId ? 'selected' : ''}>${t.name || t.username}</option>`).join('');
+                // Insert the dropdowns and buttons after the nameContainer
+const dropdownsHtml = `
+  <div class='d-flex align-items-center mb-2'>
+    <span style='font-weight:bold; min-width:70px; margin-left:8px;'>المستوى</span>
+    <select class='form-select form-select-sm' id='edit-class-level' style='flex:1;'>${levelOptions}</select>
+  </div>
+  <div class='d-flex align-items-center mb-2'>
+    <span style='font-weight:bold; min-width:70px; margin-left:8px;'>المعلم</span>
+    <select class='form-select form-select-sm' id='edit-class-teacher' style='flex:1;'>${teacherOptions}</select>
+  </div>
+  <div class='d-flex align-items-center mb-2'>
+    <span style='font-weight:bold; min-width:90px; margin-left:8px;'>معلم احتياطي</span>
+    <select class='form-select form-select-sm' id='edit-class-backup' style='flex:1;'>${backupOptions}</select>
+  </div>
+`;
+const controlsDiv = document.createElement('div');
+controlsDiv.innerHTML = dropdownsHtml;
+nameContainer.after(controlsDiv);
+btn.style.display = 'none';
+const saveBtn = document.createElement('button');
+saveBtn.className = 'btn btn-sm btn-success ms-2';
+saveBtn.textContent = 'حفظ';
+const cancelBtn = document.createElement('button');
+cancelBtn.className = 'btn btn-sm btn-secondary ms-2';
+cancelBtn.textContent = 'إلغاء';
+controlsDiv.appendChild(saveBtn);
+controlsDiv.appendChild(cancelBtn);
+saveBtn.onclick = function() {
+  const newName = classDiv.querySelector('.edit-class-input').value.trim();
+  const newLevelId = classDiv.querySelector('#edit-class-level').value;
+  const newTeacherId = classDiv.querySelector('#edit-class-teacher').value;
+  const newBackupId = classDiv.querySelector('#edit-class-backup').value;
+  fetch(`/classes/${classDiv.getAttribute('data-class-id')}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: newName, level_id: newLevelId, teacher_id: newTeacherId, backup_teacher_id: newBackupId })
+  }).then(r => r.json()).then(resp => {
+    if(resp.success) loadClasses();
+    else alert(resp.error || 'حدث خطأ أثناء التعديل');
+  });
+};
+cancelBtn.onclick = function() { loadClasses(); };
+
+              });
+            };
+          });
+
+          document.querySelectorAll('.show-students-btn').forEach(btn => {
+            btn.onclick = function() {
+              const btn = this;
+              const card = btn.closest('.class-block');
+              const studentsDiv = card.querySelector('.students-list');
+              const classId = card.getAttribute('data-class-id');
+              if (studentsDiv.style.display === 'block') {
+                studentsDiv.style.display = 'none';
+                studentsDiv.innerHTML = '';
+                return;
+              }
+              fetch(`/students/${classId}`)
+                .then(r => r.json())
+                .then(students => {
+                  if (students.length === 0) {
+                    studentsDiv.innerHTML = '<div class="text-muted">لا يوجد طلاب في هذا الصف</div>';
+                  } else {
+                    //console.log('[DEBUG] Students to render for class', classId, students);
+studentsDiv.innerHTML = `<div class="class-students-section" style="background:#fcfcf7; border-radius:8px; padding:10px 8px; margin-bottom:4px;">` +
+  students.map(s => `
+    <div class="d-flex align-items-center justify-content-between border-bottom py-1">
+      <span class="fw-bold">${s.name}</span>
+      <span>
+        <button class="btn btn-secondary btn-sm ms-2 abilities-btn" data-student-id="${s.id}" data-class-id="${classId}">القدرات</button>
+      </span>
+    </div>
+  `).join('') + `</div>`;
+                  }
+                  studentsDiv.style.display = 'block';
+                  setTimeout(() => {
+                    document.querySelectorAll('.abilities-btn').forEach(btn => {
+                      btn.onclick = function(e) {
+                        const studentId = btn.getAttribute('data-student-id');
+                        const classId = btn.getAttribute('data-class-id');
+                        window.open(`/student_abilities/${studentId}/${classId}`, '_blank');
+                      };
+                    });
+                  }, 0);
+                });
+            };
+          });
+        });
+      }
+      loadClasses();
+
+      // Populate levels and teachers dropdowns for add-class-form
+      function populateClassDropdowns() {
+        fetch('/levels').then(r => r.json()).then(levels => {
+  const levelSelect = document.getElementById('level-select');
+  if (levelSelect) {
+    levelSelect.innerHTML = '<option value="">اختر المستوى</option>' + levels.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  }
+});
+        fetch('/teachers').then(r => r.json()).then(teachers => {
+  const teacherSelect = document.getElementById('teacher-select');
+  const backupTeacherSelect = document.getElementById('backup-teacher-select');
+  if (teacherSelect) {
+    teacherSelect.innerHTML = '<option value="">اختر المعلم</option>' + teachers.map(t => `<option value="${t.id}">${t.name || t.username}</option>`).join('');
+  }
+  if (backupTeacherSelect) {
+    backupTeacherSelect.innerHTML = '<option value="">اختر معلم احتياطي</option>' + teachers.map(t => `<option value="${t.id}">${t.name || t.username}</option>`).join('');
+  }
+});
+      }
+      const addClassForm = document.getElementById('add-class-form');
+if (addClassForm) {
+  populateClassDropdowns();
+  addClassForm.addEventListener('focusin', populateClassDropdowns);
+  addClassForm.onsubmit = function(e) {
+          e.preventDefault();
+          let fd = new FormData(this);
+          fetch('/classes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: fd.get('name'),
+              level_id: fd.get('level_id'),
+              teacher_id: fd.get('teacher_id'),
+              backup_teacher_id: fd.get('backup_teacher_id')
+            })
+          }).then(r => r.json()).then(resp => {
+            if(resp.success) {
+              loadClasses();
+              this.reset();
+            } else {
+              alert(resp.error || 'خطأ أثناء إضافة الصف');
+            }
+          });
+        };
+      }
+      // --- Levels Management ---
+      function loadLevels() {
+        fetch('/levels').then(r => r.json()).then(levels => {
+          renderLevels(levels);
+        });
+      }
+
+      // Load groups for a specific level
+      function loadGroupsForLevel(levelId, callback) {
+        fetch(`/curriculum_groups?level_id=${levelId}`)
+            .then(response => response.json())
+            .then(groups => {
+                callback(groups);
+            });
+      }
+
+      window.loadGroupsForLevel = loadGroupsForLevel;
+
+      // Add group for a level
+      function addGroupForLevel(levelId, groupName, callback) {
+        fetch('/curriculum_groups', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: groupName, level_id: levelId })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) callback();
+        });
+      }
+
+      // Delete group for a level
+      function deleteGroupForLevel(levelId, groupId, callback) {
+        if (!confirm('هل أنت متأكد أنك تريد حذف هذه المجموعة؟')) return;
+        fetch(`/curriculum_groups/${groupId}?level_id=${levelId}`, {
+            method: 'DELETE',
+        })
+        .then((response) => {
+          if (!response.ok) throw new Error('Delete failed');
+          if (callback) callback();
+        })
+        .catch((err) => alert('حدث خطأ أثناء حذف المجموعة'));
+      }
+
+      // When displaying levels, load only their groups
+      function renderLevels(levels) {
+        const levelsContainer = document.getElementById('levels-container');
+        if (!levelsContainer) return;
+        levelsContainer.innerHTML = '';
+        levels.forEach(level => {
+            const levelDiv = document.createElement('div');
+            levelDiv.className = 'card mb-4';
+            levelDiv.innerHTML = `
+                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+              <span class="d-flex align-items-center"><span class="ms-1">المستوى</span><span id="level-name-${level.id}" class="fw-bold ms-2">${level.name}</span></span>
+                    <div>
+                        <button class="btn btn-sm btn-primary me-1" onclick="editLevel(${level.id}, '${level.name}')">تعديل</button>
+<button class="btn btn-sm btn-support-material me-1" style="background:#a259f7;color:#fff;" onclick="openSupportMaterialModal(${level.id})">مواد الدعم</button>
+<button class="btn btn-sm btn-danger me-1" onclick="deleteLevel(${level.id})">حذف</button>
+                    </div>
+                </div>
+                <div class="card-body" id="groups-for-level-${level.id}"></div>
+            `;
+            levelsContainer.appendChild(levelDiv);
+            // Load groups for this level
+            loadGroupsForLevel(level.id, groups => {
+                renderGroups(groups, level.id);
+            });
+        });
+      }
+
+      function deleteLevel(levelId) {
+        if (!confirm('هل أنت متأكد أنك تريد حذف هذا المستوى؟')) return;
+        fetch(`/delete_level/${levelId}`, { method: 'DELETE' })
+            .then((response) => {
+              if (!response.ok) throw new Error('Delete failed');
+              loadLevels();
+            })
+            .catch((err) => alert('حدث خطأ أثناء حذف المستوى'));
+      }
+
+      function editLevel(levelId, oldName) {
+        const nameSpan = document.getElementById(`level-name-${levelId}`);
+        nameSpan.innerHTML = `<input id='edit-level-input-${levelId}' class='form-control d-inline w-50' value='${oldName}'>`;
+        const btns = nameSpan.parentElement.parentElement.querySelectorAll('button');
+        btns.forEach(btn => btn.style.display = 'none');
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-sm btn-success me-1';
+        saveBtn.textContent = 'حفظ';
+        saveBtn.onclick = function() {
+            const newName = document.getElementById(`edit-level-input-${levelId}`).value;
+            fetch('/edit_level_name', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ level_id: levelId, new_name: newName })
+            })
+              .then((response) => response.json())
+              .then((result) => {
+                if (result.success) loadLevels();
+                else alert(result.error || 'فشل التعديل');
+              })
+              .catch(() => alert('حدث خطأ أثناء تعديل المستوى'));
+        };
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-sm btn-secondary me-1';
+        cancelBtn.textContent = 'إلغاء';
+        cancelBtn.onclick = () => loadLevels();
+        nameSpan.parentElement.appendChild(saveBtn);
+        nameSpan.parentElement.appendChild(cancelBtn);
+      }
+
+      window.deleteLevel = deleteLevel;
+      window.editLevel = editLevel;
+
+      function renderGroups(groups, levelId) {
+        const groupsList = document.getElementById(`groups-for-level-${levelId}`);
+        if (!groupsList) return;
+        groupsList.innerHTML = '';
+        groups.forEach(group => {
+            const safeGroupName = group.name.replace(/'/g, "\\'");
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'card mb-2 border-secondary';
+            groupDiv.innerHTML = `
+                <div class="card-body p-2 d-flex justify-content-between align-items-center">
+              <span class="d-flex align-items-center"><span class="ms-1">المجموعة</span><span id="group-name-${group.id}" class="fw-bold ms-2">${group.name}</span></span>
+                    <div>
+                        <button class="btn btn-sm btn-primary me-1" onclick="editGroup(${group.id}, '${safeGroupName}', ${levelId})">تعديل</button>
+<button class="btn btn-sm btn-info" onclick="toggleSubjects(${group.id}, ${levelId})" id="show-subjects-btn-${group.id}">المواد</button>
+<button class="btn btn-sm btn-danger me-1" onclick="deleteGroupForLevel(${levelId}, ${group.id}, () => loadGroupsForLevel(${levelId}, groups => renderGroups(groups, ${levelId})))">حذف</button>
+                    </div>
+                </div>
+                <div id="subjects-for-group-${group.id}" style="display:none; margin-top:12px;"></div>
+            `;
+            groupsList.appendChild(groupDiv);
+        });
+        // Add group input
+        const addDiv = document.createElement('div');
+        addDiv.className = 'input-group my-2';
+        addDiv.innerHTML = `
+            <input type="text" id="add-group-input-${levelId}" class="form-control" placeholder="اسم المجموعة">
+            <button class="btn btn-success" onclick="addGroupForLevel(${levelId}, document.getElementById('add-group-input-${levelId}').value, () => loadGroupsForLevel(${levelId}, groups => renderGroups(groups, ${levelId})))">إضافة مجموعة</button>
+        `;
+        groupsList.appendChild(addDiv);
+      }
+
+      window.renderGroups = renderGroups;
+
+      function editGroup(groupId, oldName, levelId) {
+        const nameSpan = document.getElementById(`group-name-${groupId}`);
+        nameSpan.innerHTML = `<input id='edit-group-input-${groupId}' class='form-control d-inline w-50' value='${oldName}'>`;
+        const btns = nameSpan.parentElement.parentElement.querySelectorAll('button');
+        btns.forEach(btn => btn.style.display = 'none');
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-sm btn-success me-1';
+        saveBtn.textContent = 'حفظ';
+        saveBtn.onclick = function() {
+            const newName = document.getElementById(`edit-group-input-${groupId}`).value;
+            fetch(`/curriculum_groups/${groupId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName, level_id: levelId })
+            }).then(r => r.json()).then(() => loadGroupsForLevel(levelId, groups => renderGroups(groups, levelId)));
+        };
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-sm btn-secondary me-1';
+        cancelBtn.textContent = 'إلغاء';
+        cancelBtn.onclick = () => loadGroupsForLevel(levelId, groups => renderGroups(groups, levelId));
+        nameSpan.parentElement.appendChild(saveBtn);
+        nameSpan.parentElement.appendChild(cancelBtn);
+      }
+
+      function toggleSubjects(groupId, levelId) {
+        const section = document.getElementById(`subjects-for-group-${groupId}`);
+        const btn = document.getElementById(`show-subjects-btn-${groupId}`);
+        if (section.style.display === 'none') {
+            section.style.display = '';
+            btn.textContent = 'إخفاء المواد';
+            loadSubjects(groupId, section, levelId);
+        } else {
+            section.style.display = 'none';
+            btn.textContent = 'المواد';
+        }
+      }
+
+      function loadSubjects(groupId, section, levelId) {
+        fetch(`/curriculum_items/${groupId}`)
+            .then(r => r.json())
+            .then(subjects => {
+                section.innerHTML = '';
+                subjects.forEach(subject => {
+                    const subjectDiv = document.createElement('div');
+                    subjectDiv.className = 'input-group mb-2';
+                    subjectDiv.innerHTML = `
+                        <span id="subject-name-${subject.id}" class="form-control bg-white border-0">${subject.name}</span>
+                        <button class="btn btn-sm btn-primary me-1" onclick="startEditSubject(${subject.id}, ${groupId}, ${levelId})">تعديل</button>
+<button class="btn btn-sm btn-danger me-1" onclick="deleteSubject(${subject.id}, ${groupId}, ${levelId})">حذف</button>
+                    `;
+                    section.appendChild(subjectDiv);
+                });
+                // Add subject input
+                const addDiv = document.createElement('div');
+                addDiv.className = 'input-group my-2';
+                addDiv.innerHTML = `
+                    <input type="text" id="add-subject-input-${groupId}" class="form-control" placeholder="اسم المادة">
+                    <button class="btn btn-success" onclick="addSubject(${groupId}, ${levelId})">إضافة مادة</button>
+                `;
+                section.appendChild(addDiv);
+            });
+      }
+
+      function startEditSubject(subjectId, groupId, levelId) {
+        const subjectNameSpan = document.getElementById(`subject-name-${subjectId}`);
+        const oldName = subjectNameSpan.textContent;
+        const parentDiv = subjectNameSpan.parentElement;
+        parentDiv.innerHTML = `
+          <input type="text" class="form-control" value="${oldName}" id="subject-input-${subjectId}">
+          <button class="btn btn-sm btn-success me-1" onclick="saveEditSubject(${subjectId}, ${groupId}, ${levelId})">حفظ</button>
+          <button class="btn btn-sm btn-secondary me-1" onclick="cancelEditSubject(${subjectId}, ${groupId}, ${levelId}, '${oldName.replace(/'/g, "\\'")}')">إلغاء</button>
+        `;
+      }
+
+      function saveEditSubject(subjectId, groupId, levelId) {
+        const input = document.getElementById(`subject-input-${subjectId}`);
+        const name = input.value;
+        fetch(`/curriculum_items/${subjectId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        }).then(r => r.json()).then(() => loadSubjects(groupId, document.getElementById(`subjects-for-group-${groupId}`), levelId));
+      }
+
+      function cancelEditSubject(subjectId, groupId, levelId, oldName) {
+        loadSubjects(groupId, document.getElementById(`subjects-for-group-${groupId}`), levelId);
+      }
+
+      function addSubject(groupId, levelId) {
+        const input = document.getElementById(`add-subject-input-${groupId}`);
+        const name = input.value;
+        if (!name) return;
+        fetch('/curriculum_items', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, group_id: groupId })
+        }).then(r => r.json()).then(() => loadSubjects(groupId, document.getElementById(`subjects-for-group-${groupId}`), levelId));
+      }
+
+      function deleteSubject(subjectId, groupId, levelId) {
+        if (!confirm('هل أنت متأكد من حذف المادة؟')) return;
+        fetch(`/curriculum_items/${subjectId}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(() => loadSubjects(groupId, document.getElementById(`subjects-for-group-${groupId}`), levelId));
+      }
+
+      window.startEditSubject = startEditSubject;
+      window.saveEditSubject = saveEditSubject;
+      window.cancelEditSubject = cancelEditSubject;
+
+      // Make handler functions global for dynamic HTML onclick
+      window.editLevel = editLevel;
+      window.deleteLevel = deleteLevel;
+      window.editGroup = editGroup;
+      window.toggleSubjects = toggleSubjects;
+      window.addGroupForLevel = addGroupForLevel;
+      window.deleteGroupForLevel = deleteGroupForLevel;
+      window.addSubject = addSubject;
+      window.deleteSubject = deleteSubject;
+
+      // Initial load: fetch levels and render
+      loadLevels();
+
+      // Add Level
+      const addLevelForm = document.getElementById('add-level-form');
+      if (addLevelForm) {
+        addLevelForm.onsubmit = function(e) {
+          e.preventDefault();
+          const name = this.name.value.trim();
+          if (!name) return;
+          fetch('/levels', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+          }).then(r => r.json()).then(resp => {
+            if (resp.success) {
+              this.reset();
+              loadLevels();
+            } else {
+              alert(resp.error || 'خطأ أثناء إضافة المستوى');
+            }
+          });
+        };
+      }
+
+      // Event delegation for level actions
+      document.addEventListener('click', function(e) {
+        // Edit level name
+        if (e.target.classList.contains('edit-level-btn')) {
+          const levelCard = e.target.closest('.level-card');
+          const nameSpan = levelCard.querySelector('.level-name');
+          const currentName = nameSpan.textContent;
+          nameSpan.innerHTML = `<input class='form-control form-control-sm edit-level-input' value='${currentName}'>`;
+          e.target.style.display = 'none';
+          const saveBtn = document.createElement('button');
+          saveBtn.className = 'btn btn-sm btn-success ms-2';
+          saveBtn.textContent = 'حفظ';
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'btn btn-sm btn-secondary ms-2';
+          cancelBtn.textContent = 'إلغاء';
+          e.target.after(saveBtn, cancelBtn);
+          saveBtn.onclick = function() {
+            const newName = nameSpan.querySelector('input').value.trim();
+            const levelId = levelCard.getAttribute('data-level-id');
+            fetch(`/levels`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: levelId, name: newName })
+            }).then(r => r.json()).then(resp => {
+              if (resp.success) {
+                nameSpan.textContent = newName;
+                e.target.style.display = '';
+                saveBtn.remove();
+                cancelBtn.remove();
+              } else {
+                alert(resp.error || 'خطأ أثناء تعديل اسم المستوى');
+              }
+            });
+          };
+          cancelBtn.onclick = function() {
+            nameSpan.textContent = currentName;
+            e.target.style.display = '';
+            saveBtn.remove();
+            cancelBtn.remove();
+          };
+        }
+        // Delete level
+        else if (e.target.classList.contains('delete-level-btn')) {
+          const levelCard = e.target.closest('.level-card');
+          const levelId = levelCard.getAttribute('data-level-id');
+          if (confirm('هل أنت متأكد أنك تريد حذف هذا المستوى؟')) {
+            fetch(`/levels/${levelId}`, { method: 'DELETE' })
+              .then(r => r.json())
+              .then(resp => {
+                if (resp.success) {
+                  levelCard.remove();
+                } else {
+                  alert(resp.error || 'حدث خطأ أثناء حذف المستوى');
+                }
+              })
+              .catch(() => alert('حدث خطأ أثناء حذف المستوى'));
+          }
+        }
+      });
+    });
+
+
+/* function renderStudents(students, groupByClass) {
+  if (!Array.isArray(students)) students = [];
+  let html = '';
+  if (!groupByClass) {
+    html = students.map(s => `
+      <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_id || ''}'>
+        <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
+          <div>
+            <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''}</span>
+          </div>
+          <div class='student-actions mt-2 mt-md-0 d-flex flex-wrap gap-2'>
+            <button class='btn btn-primary btn-sm edit-student-btn' data-id='${s.id}'>تعديل</button>
+            <button class='btn btn-danger btn-sm delete-student-btn' data-id='${s.id}'>حذف</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    // Group by class logic here if needed
+    html = '';
+    // ...
+  }
+  const studentList = document.getElementById('student-list');
+  if (studentList) {
+    studentList.innerHTML = html;
+    attachStudentCardHandlers && attachStudentCardHandlers();
+  }
+} */
+// Ensure this is defined at the top-level and before any code that calls it
+function attachStudentCardHandlers() {
+  //console.log('[DEBUG] (DASHBOARD) attachStudentCardHandlers called');
+  //console.log('[DEBUG] attachStudentCardHandlers: Attaching handlers to student cards...');
+  
+
+  
+  // Class assignment
+  document.querySelectorAll('.class-btn').forEach(btn => {
+  btn.onclick = function() {
+    const card = btn.closest('.student-card');
+    const menu = card.querySelector('.class-menu');
+    const currentClassId = card.getAttribute('data-class-id') || '';
+    if(menu.style.display === 'none') {
+      fetch('/classes').then(r => r.json()).then(classes => {
+        const dropdown = menu.querySelector('.class-dropdown');
+        let options = `<option value=""${!currentClassId ? ' selected' : ''}>لا شيء</option>`;
+        options += classes.map(cls => 
+          `<option value="${cls.id}"${String(cls.id) === String(currentClassId) ? ' selected' : ''}>${cls.name}</option>`
+        ).join('');
+        dropdown.innerHTML = options;
+        menu.style.display = 'block';
+      });
+    } else {
+      menu.style.display = 'none';
+    }
+  };
+});
+  
+  document.querySelectorAll('.assign-class-btn').forEach(btn => {
+    btn.onclick = function() {
+      const card = btn.closest('.student-card');
+      const studentId = card.getAttribute('data-id');
+      const classId = card.querySelector('.class-dropdown').value;
+      fetch(`/update_student/${studentId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_id: classId })
+      }).then(r => r.json()).then(resp => {
+        if(resp.success) {
+          card.querySelector('.class-menu').style.display = 'none';
+          // Refresh search results if a search is active
+          if(document.getElementById('backend-student-search2') && document.getElementById('backend-student-search2').value.trim().length > 0) {
+            document.getElementById('backend-student-search2').dispatchEvent(new Event('input'));
+          } else if(document.getElementById('backend-student-search') && document.getElementById('backend-student-search').value.trim().length > 0) {
+            document.getElementById('backend-student-search').dispatchEvent(new Event('input'));
+          }
+        } else {
+          alert(resp.error || 'خطأ في حفظ الصف');
+        }
+      });
+    };
+  });
+  
+  document.querySelectorAll('.cancel-class-btn').forEach(btn => {
+    btn.onclick = function() {
+      const menu = btn.closest('.class-menu');
+      menu.style.display = 'none';
+    };
+  });
+  
+  // Delete student
+  document.querySelectorAll('.delete-student-btn').forEach(btn => {
+    //console.log('[DEBUG] Attaching delete handler to student', btn.dataset.id);
+
+    btn.onclick = function() {
+      if (!confirm('هل أنت متأكد من حذف هذا الطالب؟')) return;
+      const id = btn.dataset.id;
+      fetch(`/delete_student/${id}`, { method: 'DELETE' }).then(r => r.json()).then(resp => {
+        if(document.getElementById('backend-student-search2') && document.getElementById('backend-student-search2').value.trim().length > 0) {
+          document.getElementById('backend-student-search2').dispatchEvent(new Event('input'));
+        } else if(document.getElementById('backend-student-search') && document.getElementById('backend-student-search').value.trim().length > 0) {
+          document.getElementById('backend-student-search').dispatchEvent(new Event('input'));
+        }
+      });
+    };
+  });
+  
+  // Edit student
+  document.querySelectorAll('.edit-student-btn').forEach(btn => {
+    //console.log('[DEBUG] Attaching edit handler to student', btn.dataset.id);
+
+    btn.onclick = function() {
+      const studentRow = btn.closest('.student-card');
+      const studentId = btn.dataset.id;
+      
+      // Save the original HTML to restore on cancel
+      const originalHTML = studentRow.innerHTML;
+      fetch(`/students`).then(r => r.json()).then(students => {
+        const s = students.find(stu => String(stu.id) === String(studentId));
+        if (!s) {
+          alert('لم يتم العثور على بيانات الطالب');
+          studentRow.innerHTML = `<div style='color:red;font-weight:bold;'>[DEBUG] لم يتم العثور على بيانات الطالب (${studentId})</div>`;
+          return;
+        }
+        studentRow.innerHTML = `
+          <div class='card card-body bg-light'>
+            <div class='row g-2 align-items-center'>
+              <div class='col-md-6'>
+                <label class='form-label'>البريد الإلكتروني / اسم المستخدم</label>
+                <input class='form-control details-email-username' value='${s.email || ''}'>
+              </div>
+              <div class='col-md-6'>
+                <label class='form-label'>اسم الطالب</label>
+                <input class='form-control details-name' value='${s.name || ''}'>
+              </div>
+            </div>
+            <div class='row g-2 align-items-center mt-1'>
+              <div class='col-md-6'>
+                <label class='form-label'>البريد الإلكتروني الثانوي</label>
+                <input class='form-control details-secondary-email' value='${s.secondary_email || ''}'>
+              </div>
+            <div class='row g-2 align-items-center mt-1'>
+              <div class='col-md-6'>
+                <label class='form-label'>كلمة المرور (للمستخدم الجديد فقط أو لإعادة التعيين)</label>
+                <input type='password' class='form-control details-password' placeholder='أدخل كلمة المرور الجديدة إذا لزم الأمر'>
+              </div>
+            </div>
+            <div class='row g-2 align-items-center mt-1'>
+              <div class='col-md-6'>
+                <label class='form-label'>تاريخ الميلاد</label>
+                <input type='date' class='form-control details-dob' value='${s.date_of_birth || ''}'>
+              </div>
+              <div class='col-md-6'>
+                <label class='form-label'>رقم الهاتف</label>
+                <input class='form-control details-phone' value='${s.phone || ''}'>
+              </div>
+            </div>
+            <div class='row g-2 align-items-center mt-1'>
+              <div class='col-md-6'>
+                <label class='form-label'>ملاحظات</label>
+                <textarea class='form-control details-notes' rows='2'>${s.notes || ''}</textarea>
+              </div>
+              <div class='col-md-6'>
+                <label class='form-label'>تنبيهات</label>
+                <textarea class='form-control details-alerts' rows='2'>${s.alerts || ''}</textarea>
+              </div>
+            </div>
+            <div class='d-flex justify-content-end mt-2' style='gap:8px;'>
+              <button class='btn btn-sm btn-success save-details-btn'>حفظ</button>
+              <button class='btn btn-sm btn-secondary cancel-details-btn'>إلغاء</button>
+            </div>
+          </div>
+        `;
+        // Save handler
+        studentRow.querySelector('.save-details-btn').onclick = async function() {
+          const emailUsernameValue = studentRow.querySelector('.details-email-username').value.trim();
+          const updated = {
+            name: studentRow.querySelector('.details-name').value.trim(),
+            username: emailUsernameValue,
+            email: emailUsernameValue,
+            secondary_email: studentRow.querySelector('.details-secondary-email').value.trim(),
+            date_of_birth: studentRow.querySelector('.details-dob').value,
+            phone: studentRow.querySelector('.details-phone').value.trim(),
+            notes: studentRow.querySelector('.details-notes').value.trim(),
+            alerts: studentRow.querySelector('.details-alerts').value.trim(),
+          };
+          // Always allow password reset if entered
+          const passwordInputValue = studentRow.querySelector('.details-password').value;
+          if (passwordInputValue) {
+            updated.new_password = passwordInputValue;
+          }
+          fetch(`/update_student/${s.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated)
+          }).then(r => r.json()).then(resp => {
+            if(resp.success) {
+              fetchAndRenderStudents();
+            } else {
+              alert(resp.error || 'حدث خطأ أثناء الحفظ');
+            }
+          });
+        };
+        // Cancel handler
+        studentRow.querySelector('.cancel-details-btn').onclick = function() {
+          
+          studentRow.innerHTML = originalHTML;
+          attachStudentCardHandlers();
+        };
+      });
+    };
+  });
+
+} 
+
+// Move this function outside of attachStudentCardHandlers
+/* function renderStudents(students, groupByClass) {
+  if (!Array.isArray(students)) students = [];
+  let html = '';
+  if (!groupByClass) {
+    html = students.map(s => `
+      <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_id || ''}'>
+        <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
+          <div>
+            <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''}</span>
+          </div>
+          <div class='student-actions mt-2 mt-md-0 d-flex flex-wrap gap-2'>
+            <button class='btn btn-primary btn-sm edit-student-btn' data-id='${s.id}'>تعديل</button>
+            <button class='btn btn-danger btn-sm delete-student-btn' data-id='${s.id}'>حذف</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    // Group by class logic here if needed
+    html = '';
+    // ...
+  }
+  const studentList = document.getElementById('student-list');
+  if (studentList) {
+    studentList.innerHTML = html;
+    attachStudentCardHandlers && attachStudentCardHandlers();
+  }
+} */
+
+/* function fetchAndRenderStudents() {
+  console.log('[DEBUG] fetchAndRenderStudents CALLED');
+  const searchInput = document.getElementById('backend-student-search2');
+  const groupByCheckbox = document.getElementById('group-by-class-checkbox');
+  const query = searchInput ? searchInput.value.trim() : '';
+  const groupByClass = groupByCheckbox ? groupByCheckbox.checked : false;
+  const url = `/students/search?query=${encodeURIComponent(query)}`;
+  //console.log('[DEBUG] Fetching:', url, 'Group by class:', groupByClass);
+  fetch(url)
+    .then(r => {
+      if (!r.ok) {
+        throw new Error('Network response was not ok: ' + r.status);
+      }
+      return r.json();
+    })
+    .then(data => {
+      let students = Array.isArray(data) ? data : (data.students || data.results || []);
+      if (!Array.isArray(students)) students = [];
+      renderStudents(students, groupByClass);
+    })
+    .catch(e => {
+      renderStudents([], groupByClass);
+      alert('حدث خطأ أثناء تحميل الطلاب أو ليس لديك صلاحية الوصول');
+    });
+} */
+
+
+function fetchAndRenderStudents() {
+  //console.log('[DEBUG] fetchAndRenderStudents ONE CALLED');
+  const searchInput = document.getElementById('backend-student-search2');
+  const groupByCheckbox = document.getElementById('group-by-class-checkbox');
+  const query = searchInput ? searchInput.value.trim() : '';
+  const groupByClass = groupByCheckbox ? groupByCheckbox.checked : false;
+  const url = `/students/search?query=${encodeURIComponent(query)}`;
+  //console.log('[DEBUG] Fetching:', url, 'Group by class:', groupByClass);
+  fetch(url)
+    .then(r => {
+      if (!r.ok) {
+        throw new Error('Network response was not ok: ' + r.status);
+      }
+      return r.json();
+    })
+    .then(data => {
+      let students = Array.isArray(data) ? data : (data.students || data.results || []);
+      if (!Array.isArray(students)) students = [];
+      renderStudents(students, groupByClass);
+    })
+    .catch(e => {
+      renderStudents([], groupByClass);
+      alert('حدث خطأ أثناء تحميل الطلاب أو ليس لديك صلاحية الوصول');
+    });
+}
+
+      fetchAndRenderStudents();
+      function renderStudents(students, groupByClass) {
+    //console.log('[DEBUG] renderStudents CALLED');
+    if (!Array.isArray(students)) students = [];
+    let html = '';
+    if (!groupByClass) {
+      students.forEach(s => {
+        console.log('[DEBUG] Student:', s.id, s.name, 'class_id:', s.class_name);
+      });
+      html = students.map(s => `
+        <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_name || ''}'>
+          <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
+            <div>
+              <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''}</span>
+            </div>
+            <div class='student-actions mt-2 mt-md-0 d-flex flex-wrap gap-2'>
+              <button class='btn btn-primary edit-student-btn' data-id='${s.id}'>تعديل</button>
+              <button class='btn btn-danger delete-student-btn' data-id='${s.id}'>حذف</button>
+              <button class='btn btn-sm btn-info class-btn' style='min-width:60px;' data-id='${s.id}'>الصف</button>
+            </div>
+            <div class='class-menu' style='display:none;margin-top:8px;'>
+              <select class='form-select class-dropdown' style='width:auto;display:inline-block;max-width:180px;'></select>
+              <button class='btn btn-success btn-sm assign-class-btn' data-id='${s.id}'>حفظ</button>
+              <button class='btn btn-secondary btn-sm cancel-class-btn'>إلغاء</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      const studentList = document.getElementById('student-list');
+if (studentList) {
+  studentList.innerHTML = html;
+  attachStudentCardHandlers && attachStudentCardHandlers();
+}
+      attachStudentCardHandlers();
+      return;
+    }
+    
+    // Group by class
+    let grouped = {};
+    students.forEach(s => {
+      // Use s.class_name or s.class or fallback
+      const className = s.class_name || s.class || 'بدون صف';
+      if (!grouped[className]) grouped[className] = [];
+      grouped[className].push(s);
+    });
+    
+    html += Object.keys(grouped).map(className => {
+      return `
+        <div class='class-group mb-3'>
+          <div class='px-3 py-2 rounded-top fw-bold' style='font-size:1.1rem; background:#212529; color:#fff;'>${className}</div>
+          <div class='bg-light p-2 rounded-bottom'>
+            ${grouped[className].map(s => `
+              <div class='student-card mb-2' data-id='${s.id}' data-username='${s.username || ''}'>
+                <div class='d-flex flex-column flex-md-row align-items-center justify-content-between'>
+                  <span class='fw-bold student-name'>${s.name || ''}</span>
+                  <div class='student-actions mt-2 mt-md-0 d-flex flex-wrap gap-2'>
+                    <button class='btn btn-primary edit-student-btn' data-id='${s.id}'>تعديل</button>
+                    <button class='btn btn-danger delete-student-btn' data-id='${s.id}'>حذف</button>
+                    
+                    <button class='btn btn-sm btn-info class-btn' style='min-width:60px;' data-id='${s.id}'>الصف</button>
+                  </div>
+                  <div class='class-menu' style='display:none;margin-top:8px;'>
+                    <select class='form-select class-dropdown' style='width:auto;display:inline-block;max-width:180px;'></select>
+                    <button class='btn btn-success btn-sm assign-class-btn' data-id='${s.id}'>حفظ</button>
+                    <button class='btn btn-secondary btn-sm cancel-class-btn'>إلغاء</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    const studentList = document.getElementById('student-list');
+    if (studentList) {
+      studentList.innerHTML = html;
+      attachStudentCardHandlers();
+    }
+  
+  
+  // Event listeners
+  const searchInput = document.getElementById('backend-student-search2');
+  const groupByCheckbox = document.getElementById('group-by-class-checkbox');
+  if (searchInput && groupByCheckbox) {
+    searchInput.addEventListener('input', fetchAndRenderStudents);
+    groupByCheckbox.addEventListener('change', fetchAndRenderStudents);
+    // Initial render
+    fetchAndRenderStudents();
+  }
+}
+
+      const addStudentForm = document.getElementById('add-student-form');
+if (addStudentForm) {
+  addStudentForm.onsubmit = function(e) {
+        e.preventDefault();
+        let fd = new FormData(this);
+        fetch('/create_student', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: fd.get('username'),
+            name: fd.get('name'),
+            password: fd.get('password')
+          })
+        }).then(r => r.json()).then(resp => {
+          if(resp.success) {
+            fetchAndRenderStudents();
+            this.reset();
+          } else {
+            alert(resp.error || 'خطأ أثناء إضافة الطالب');
+          }
+        });
+      };
+      {% endif %}
+    }
+      {% if role == 'local_admin' %}
+      // --- Teachers Management ---
+      let teacherDetailsOpen = null;
+      function loadTeachers() {
+        fetch('/teachers').then(r => r.json()).then(teachers => {
+          let html = teachers.map(t => `
+            <div class='teacher-card' data-id='${t.id}'>
+              <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
+                <div>
+                  <span class='fw-bold teacher-username' style='font-size:1.1rem;'>${t.name || ''}</span>
+                </div>
+                <div class='teacher-actions mt-2 mt-md-0 d-flex flex-wrap gap-2'>
+                  <button class='btn btn-primary edit-teacher-btn' data-id='${t.id}'>تعديل</button>
+                  <button class='btn btn-danger delete-teacher-btn' data-id='${t.id}'>حذف</button>
+                </div>
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('teacher-list').innerHTML = html;
+          document.querySelectorAll('.delete-teacher-btn').forEach(btn => {
+            btn.onclick = function() {
+              if (!confirm('هل أنت متأكد من حذف هذا المعلم؟')) return;
+              fetch(`/teachers/${btn.dataset.id}`, { method: 'DELETE' }).then(r => r.json()).then(resp => {
+                if(resp.success) loadTeachers();
+                else alert(resp.error || 'حدث خطأ أثناء حذف المعلم');
+              });
+            };
+          });
+          document.querySelectorAll('.edit-teacher-btn').forEach(btn => {
+            btn.onclick = function() {
+              const teacherRow = btn.closest('.teacher-card');
+              const id = btn.dataset.id;
+              const teacher = teachers.find(t => t.id == id);
+              teacherRow.innerHTML = `
+                <div class='row g-2'>
+                  <div class='col-md-6 mb-2'>
+                    <label class='form-label' style='font-size:0.97em;'>البريد الإلكتروني (اسم المستخدم)</label>
+                    <input class='form-control edit-teacher-username' type='email' value='${teacher.email || ''}' required>
+                  </div>
+                  <div class='col-md-6 mb-2'>
+                    <label class='form-label' style='font-size:0.97em;'>اسم المعلم</label>
+                    <input class='form-control edit-teacher-name' value='${teacher.name || ''}' required>
+                  </div>
+                </div>
+                <div class='row g-2'>
+                  <div class='col-md-6 mb-2'>
+                    <label class='form-label' style='font-size:0.97em;'>كلمة المرور الجديدة (اختياري)</label>
+                    <input class='form-control edit-teacher-password' type='password' placeholder='كلمة المرور الجديدة (اختياري)'>
+                  </div>
+                </div>
+                <div class='row g-2 mt-2'>
+                  <div class='col-md-6'>
+                    <label class='form-label'>رقم الهاتف</label>
+                    <input class='form-control edit-teacher-phone' value='${teacher.phone || ''}'>
+                  </div>
+                  <div class='col-md-6'>
+                    <label class='form-label'>تنبيهات</label>
+                    <textarea class='form-control edit-teacher-alerts' rows='2'>${teacher.alerts || ''}</textarea>
+                  </div>
+                </div>
+                <div class='row g-2 mt-2'>
+                  <div class='col-md-12'>
+                    <label class='form-label'>ملاحظات</label>
+                    <textarea class='form-control edit-teacher-notes' rows='2'>${teacher.notes || ''}</textarea>
+                  </div>
+                </div>
+                <div class='mt-2'>
+                  <button class='btn btn-sm btn-success ms-2 save-edit-teacher-btn'>حفظ</button>
+                  <button class='btn btn-sm btn-secondary ms-2 cancel-edit-teacher-btn'>إلغاء</button>
+                </div>
+              `;
+              teacherRow.querySelector('.save-edit-teacher-btn').onclick = function() {
+                const newUsername = teacherRow.querySelector('.edit-teacher-username').value.trim();
+                const newName = teacherRow.querySelector('.edit-teacher-name').value.trim();
+                const newPassword = teacherRow.querySelector('.edit-teacher-password').value;
+                const newPhone = teacherRow.querySelector('.edit-teacher-phone').value.trim();
+                const newAlerts = teacherRow.querySelector('.edit-teacher-alerts').value.trim();
+                const newNotes = teacherRow.querySelector('.edit-teacher-notes').value.trim();
+                fetch(`/teachers/${id}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    username: newUsername,
+                    name: newName,
+                    password: newPassword,
+                    phone: newPhone,
+                    alerts: newAlerts,
+                    notes: newNotes
+                  })
+                }).then(r => r.json()).then(resp => {
+                  if(resp.success) loadTeachers();
+                  else alert(resp.error || 'حدث خطأ أثناء التعديل');
+                });
+              };
+              teacherRow.querySelector('.cancel-edit-teacher-btn').onclick = function() { loadTeachers(); };
+            };
+          });
+        });
+      
+      };
+      
+      loadTeachers();
+
+      document.getElementById('add-teacher-form').onsubmit = function(e) {
+        e.preventDefault();
+        let fd = new FormData(this);
+        fetch('/teachers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: fd.get('username'), // This is the email and username
+            password: fd.get('password'),
+            name: fd.get('name')
+          })
+        }).then(r => r.json()).then(resp => {
+          if(resp.success) {
+            loadTeachers();
+            this.reset();
+          } else {
+            alert(resp.error || 'خطأ أثناء إضافة المعلم');
+          }
+        });
+      };
+
+      {% endif %}
+    
+
+    // --- Calendar Modal & Event CRUD Logic ---
+    document.body.addEventListener('click', async function(e) {
+      if (e.target.closest('.calendar-btn')) {
+        const btn = e.target.closest('.calendar-btn');
+        const classId = btn.getAttribute('data-class-id');
+        //console.log('[DEBUG CALENDAR] Clicked calendar button, classId =', classId);
+        const classBlock = btn.closest('.class-block');
+let className = '';
+if (classBlock) {
+  const nameElem = classBlock.querySelector('.fw-bold.fs-4') || classBlock.querySelector('.class-name');
+  className = nameElem ? nameElem.innerText : '';
+}
+document.getElementById('calendar-class-name').innerText = className;
+        // Show the modal
+        var modal = new bootstrap.Modal(document.getElementById('calendarModal'));
+        modal.show();
+        // Render FullCalendar in the modal
+        setTimeout(async () => {
+          let calendarEl = document.getElementById('class-calendar');
+          if (calendarEl) {
+            calendarEl.innerHTML = '';
+            // Fetch events from backend
+            let events = [];
+            try {
+              window.currentClassId = classId;
+let resp = await fetch(`/api/events/${window.currentClassId}`);
+              events = await resp.json();
+              // Format events for FullCalendar
+              events = events.map(ev => ({
+                id: ev.id,
+                title: ev.title,
+                start: ev.start,
+                end: ev.end,
+                backgroundColor: ev.color || '#3788d8',
+                borderColor: ev.color || '#3788d8',
+                extendedProps: {
+                  description: ev.description,
+                  recurrence: ev.recurrence
+                }
+              }));
+            } catch (err) {
+              alert('خطأ في تحميل الأحداث');
+            }
+            let calendar = new FullCalendar.Calendar(calendarEl, {
+              initialView: 'dayGridMonth',
+              locale: 'ar',
+              height: 400,
+              headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              },
+              events: function(fetchInfo, successCallback, failureCallback) {
+  fetch(`/api/events/${window.currentClassId}`)
+    .then(r => r.json())
+    .then(data => {
+      const formatted = data.map(ev => ({
+        id: ev.id,
+        title: ev.title,
+        start: ev.start,
+        end: ev.end,
+        backgroundColor: ev.color || '#3788d8',
+        borderColor: ev.color || '#3788d8',
+        extendedProps: {
+          description: ev.description,
+          recurrence: ev.recurrence
+        }
+      }));
+      successCallback(formatted);
+    })
+    .catch(failureCallback);
+},
+              dateClick: function(info) {
+                openEventModal({ start: info.dateStr, mode: 'add' });
+              },
+              eventClick: function(info) {
+                openEventModal({
+                  id: info.event.id,
+                  title: info.event.title,
+                  description: info.event.extendedProps.description,
+                  start: info.event.startStr,
+                  end: info.event.endStr,
+                  color: info.event.backgroundColor,
+                  recurrence: info.event.extendedProps.recurrence,
+                  mode: 'edit',
+                  eventObj: info.event
+                });
+              }
+            });
+            window.currentCalendar = calendar;
+            calendar.render();
+          }
+        }, 300);
+      }
+    });
+    // --- Event Modal Logic ---
+    function openEventModal(eventData) {
+      const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+      const form = document.getElementById('eventForm');
+      document.getElementById('event-id').value = eventData.id || '';
+      document.getElementById('event-title').value = eventData.title || '';
+      document.getElementById('event-desc').value = eventData.description || '';
+      // Prefill start and end for new events at 8:00 and 9:00
+      if (eventData.mode === 'add' && eventData.start) {
+        const date = eventData.start.split('T')[0];
+        document.getElementById('event-start').value = date + 'T08:00';
+        document.getElementById('event-end').value = date + 'T09:00';
+      } else {
+        document.getElementById('event-start').value = eventData.start ? eventData.start.slice(0, 16) : '';
+        document.getElementById('event-end').value = eventData.end ? eventData.end.slice(0, 16) : '';
+      }
+      document.getElementById('event-color').value = eventData.color || '#3788d8';
+      document.getElementById('event-recurrence').value = eventData.recurrence || 'none';
+
+      // Recurrence End Date field logic
+      const recurrenceSelect = document.getElementById('event-recurrence');
+      const recurrenceEndWrapper = document.getElementById('recurrence-end-date-wrapper');
+      const recurrenceEndInput = document.getElementById('event-recurrence-end');
+
+      // Helper to show/hide the field
+      function toggleRecurrenceEndField() {
+        if (recurrenceSelect.value === 'weekly' || recurrenceSelect.value === 'monthly') {
+          recurrenceEndWrapper.style.display = '';
+          recurrenceEndInput.required = true;
+        } else {
+          recurrenceEndWrapper.style.display = 'none';
+          recurrenceEndInput.required = false;
+          recurrenceEndInput.value = '';
+        }
+      }
+      // Attach change event (once)
+      recurrenceSelect.onchange = toggleRecurrenceEndField;
+
+      // Set value and visibility on modal open
+      if (eventData.recurrence === 'weekly' || eventData.recurrence === 'monthly') {
+        recurrenceSelect.value = eventData.recurrence;
+        recurrenceEndInput.value = eventData.recurrence_end ? eventData.recurrence_end.split('T')[0] : '';
+        recurrenceEndWrapper.style.display = '';
+        recurrenceEndInput.required = true;
+      } else {
+        recurrenceSelect.value = 'none';
+        recurrenceEndWrapper.style.display = 'none';
+        recurrenceEndInput.required = false;
+        recurrenceEndInput.value = '';
+      }
+      // Ensure the toggle runs on open
+      toggleRecurrenceEndField();
+
+      // Show delete button only in edit mode
+      document.getElementById('delete-event-btn').style.display = eventData.mode === 'edit' ? '' : 'none';
+      modal.show();
+      // Save button logic
+      document.getElementById('save-event-btn').onclick = async function() {
+        const title = document.getElementById('event-title').value.trim();
+        const description = document.getElementById('event-desc').value.trim();
+        const start = document.getElementById('event-start').value;
+        const end = document.getElementById('event-end').value;
+        const color = document.getElementById('event-color').value;
+        const recurrence = document.getElementById('event-recurrence').value;
+        const recurrenceEnd = document.getElementById('event-recurrence-end').value;
+
+        // If recurrence is weekly/monthly, require recurrence_end
+        if ((recurrence === 'weekly' || recurrence === 'monthly') && !recurrenceEnd) {
+          alert('يرجى تحديد تاريخ انتهاء التكرار');
+          return;
+        }
+        if (!title || !start) {
+          alert('يرجى إدخال عنوان وتاريخ بدء الحدث');
+          return;
+        }
+        let eventObj = {
+          class_id: window.currentClassId,
+          title: title,
+          description: description,
+          start: start,
+          end: end || null,
+          color: color,
+          recurrence: recurrence,
+          recurrence_end: recurrence !== 'none' ? recurrenceEnd : null
+        };
+        if (eventData.mode === 'add') {
+          try {
+            let resp = await fetch('/api/events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(eventObj)
+            });
+            let newEvent = await resp.json();
+// Ensure event format matches what FullCalendar expects
+let formattedEvent = {
+  id: newEvent.id,
+  title: newEvent.title,
+  start: newEvent.start,
+  end: newEvent.end,
+  backgroundColor: newEvent.color || '#3788d8',
+  borderColor: newEvent.color || '#3788d8',
+  extendedProps: {
+    description: newEvent.description,
+    recurrence: newEvent.recurrence
+  }
+};
+window.currentCalendar.refetchEvents();
+alert('تم حفظ الحدث بنجاح');
+bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+          } catch (err) {
+            alert('خطأ في إضافة الحدث');
+          }
+        } else if (eventData.mode === 'edit' && eventData.eventObj) {
+          try {
+            let resp = await fetch(`/api/events/${eventData.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+  ...eventObj,
+  id: eventData.id // For edit mode
+})
+            });
+            let updatedEvent = await resp.json();
+            eventData.eventObj.setProp('title', updatedEvent.title);
+            eventData.eventObj.setStart(updatedEvent.start);
+            eventData.eventObj.setEnd(updatedEvent.end);
+            eventData.eventObj.setProp('backgroundColor', updatedEvent.color);
+            eventData.eventObj.setProp('borderColor', updatedEvent.color);
+            eventData.eventObj.setExtendedProp('description', updatedEvent.description);
+            eventData.eventObj.setExtendedProp('recurrence', updatedEvent.recurrence);
+            alert('تم حفظ الحدث بنجاح');
+bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+          } catch (err) {
+            alert('خطأ في تحديث الحدث');
+          }
+        }
+      };
+      // Delete logic
+  document.getElementById('delete-event-btn').onclick = function() {
+  if (eventData.recurrence && eventData.recurrence !== 'none') {
+    // Show custom modal
+    const recurringDeleteModal = new bootstrap.Modal(document.getElementById('recurringDeleteModal'));
+    recurringDeleteModal.show();
+
+    // Remove previous handlers to avoid stacking
+    document.getElementById('delete-series-btn').onclick = null;
+    document.getElementById('delete-occurrence-btn').onclick = null;
+
+    // Delete entire series
+    document.getElementById('delete-series-btn').onclick = function() {
+      fetch(`/api/events/${eventData.id}?all=1`, { method: 'DELETE' })
+        .then(r => r.json()).then(resp => {
+          if (resp.success) window.currentCalendar.refetchEvents();
+          else alert('خطأ أثناء حذف سلسلة الأحداث');
+          recurringDeleteModal.hide();
+        });
+    };
+
+    // Delete only this occurrence
+    document.getElementById('delete-occurrence-btn').onclick = function() {
+      fetch(`/api/events/${eventData.id}`, { method: 'DELETE' })
+        .then(r => r.json()).then(resp => {
+          if (resp.success) window.currentCalendar.refetchEvents();
+          else alert('خطأ أثناء حذف الحدث');
+          recurringDeleteModal.hide();
+        });
+    };
+    // The cancel button already closes the modal via data-bs-dismiss
+  } else {
+    // Not a recurring event
+    if (!confirm('هل أنت متأكد من حذف الحدث؟')) return;
+    fetch(`/api/events/${eventData.id}`, { method: 'DELETE' })
+      .then(r => r.json()).then(resp => {
+        if (resp.success) window.currentCalendar.refetchEvents();
+        else alert('خطأ أثناء حذف الحدث');
+      });
+  }
+};
+          
+        }
+      
+    
+
+      let html = students.map(s => `
+        <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_name || ''}'>
+          <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
+            <div>
+              <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''}</span>
+            </div>
+            <div class='student-actions mt-2 mt-md-0 d-flex flex-wrap gap-2'>
+              <button class='btn btn-primary edit-student-btn' data-id='${s.id}'>تعديل</button>
+              <button class='btn btn-danger delete-student-btn' data-id='${s.id}'>حذف</button>
+              <button class='btn btn-sm btn-info class-btn' style='min-width:60px;' data-id='${s.id}'>الصف</button>
+            </div>
+            <div class='class-menu' style='display:none;margin-top:8px;'>
+              <select class='form-select class-dropdown' style='width:auto;display:inline-block;max-width:180px;'></select>
+              <button class='btn btn-success btn-sm assign-class-btn' data-id='${s.id}'>حفظ</button>
+              <button class='btn btn-secondary btn-sm cancel-class-btn'>إلغاء</button>
+            </div>
+            <div class='student-details' style='display:none;'>
+              <div class='card card-body bg-light'>
+                <div class='row g-2 align-items-center'>
+                  <div class='col-md-6'>
+                    <label class='form-label'>اسم الطالب</label>
+                    <input class='form-control details-name' value='${s.name || ''}' readonly>
+                  </div>
+                  <div class='col-md-6'>
+                    <label class='form-label'>اسم المستخدم</label>
+                    <input class='form-control details-username' value='${s.username || ''}' readonly>
+                  </div>
+                </div>
+                <div class='row g-2 align-items-center mt-1'>
+                  <div class='col-md-6'>
+                    <label class='form-label'>البريد الإلكتروني</label>
+                    <input class='form-control details-email' value='${s.email || ''}' readonly>
+                  </div>
+                  <div class='col-md-6'>
+                    <label class='form-label'>البريد الإلكتروني الثانوي</label>
+                    <input class='form-control details-secondary-email' value='${s.secondary_email || ''}' readonly>
+                  </div>
+                </div>
+                <div class='row g-2 align-items-center mt-1'>
+                  <div class='col-md-6'>
+                    <label class='form-label'>تاريخ الميلاد</label>
+                    <input type='date' class='form-control details-dob' value='${s.date_of_birth || ''}' readonly>
+                  </div>
+                  <div class='col-md-6'>
+                    <label class='form-label'>رقم الهاتف</label>
+                    <input class='form-control details-phone' value='${s.phone || ''}' readonly>
+                  </div>
+                </div>
+                <div class='row g-2 align-items-center mt-1'>
+                  <div class='col-md-6'>
+                    <label class='form-label'>ملاحظات</label>
+                    <textarea class='form-control details-notes' rows='2' readonly>${s.notes || ''}</textarea>
+                  </div>
+                  <div class='col-md-6'>
+                    <label class='form-label'>تنبيهات</label>
+                    <textarea class='form-control details-alerts' rows='2' readonly>${s.alerts || ''}</textarea>
+                  </div>
+                </div>
+                <div class='d-flex justify-content-end mt-2' style='gap:8px;'>
+                  <button class='btn btn-sm btn-secondary cancel-details-btn'>إغلاق</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      const studentList = document.getElementById('student-list');
+if (studentList) {
+  studentList.innerHTML = html;
+  attachStudentCardHandlers && attachStudentCardHandlers();
+}
+
+
+</script>
+<!-- Support Material Modal -->
+<div class="modal fade" id="supportMaterialModal" tabindex="-1" aria-labelledby="supportMaterialModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="supportMaterialModalLabel">مواد الدعم للمستوى</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="supportMaterialUploadForm" class="mb-4">
+          <input type="hidden" id="support-material-level-id" name="level_id">
+          <div class="mb-3">
+            <label for="support-material-file" class="form-label">اختر ملفًا</label>
+            <input class="form-control" type="file" id="support-material-file" name="file" required>
+          </div>
+          <div class="mb-3">
+            <label for="support-material-desc" class="form-label">وصف الملف</label>
+            <input class="form-control" type="text" id="support-material-desc" name="description" required>
+          </div>
+          <button type="submit" class="btn btn-success">رفع الملف</button>
+        </form>
+        <div id="support-material-list">
+          <!-- List of files will appear here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openSupportMaterialModal(levelId) {
+  document.getElementById('support-material-level-id').value = levelId;
+  const modal = new bootstrap.Modal(document.getElementById('supportMaterialModal'));
+  modal.show();
+  loadSupportMaterials(levelId);
+}
+
+function loadSupportMaterials(levelId) {
+  fetch(`/levels/${levelId}/support_material`)
+    .then(r => r.json())
+    .then(files => {
+      let html = '';
+      if(files.length === 0) {
+        html = '<div class="alert alert-info">لا توجد مواد دعم لهذا المستوى بعد.</div>';
+      } else {
+        html = '<div class="list-group">';
+        files.forEach((f, idx) => {
+          html += `<div class="list-group-item d-flex justify-content-between align-items-center" id="support-material-row-${idx}">
+            <div>
+              <a href="${f.url}" target="_blank">${f.filename}</a><br>
+              <span class="support-material-desc" id="support-material-desc-${idx}"><small class="text-muted">${f.description}</small></span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-secondary">${f.uploader}</span>
+              <span class="badge bg-light text-dark">${f.date}</span>
+              <button class="btn btn-sm btn-primary edit-support-btn" data-idx="${idx}" data-id="${f.id || f.support_id || ''}" data-desc="${encodeURIComponent(f.description)}">تعديل</button>
+              <button class="btn btn-sm btn-danger delete-support-btn" data-id="${f.id || f.support_id || ''}">حذف</button>
+            </div>
+          </div>`;
+        });
+        html += '</div>';
+      }
+      document.getElementById('support-material-list').innerHTML = html;
+
+      // Attach delete handlers
+      document.querySelectorAll('.delete-support-btn').forEach(btn => {
+        btn.onclick = function() {
+          if (!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;
+          const id = btn.getAttribute('data-id');
+          fetch(`/support_material/${id}`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(resp => {
+              if(resp.success) loadSupportMaterials(levelId);
+              else alert(resp.error || 'فشل حذف الملف');
+            });
+        };
+      });
+      // Attach edit handlers
+      document.querySelectorAll('.edit-support-btn').forEach(btn => {
+        btn.onclick = function() {
+          const idx = btn.getAttribute('data-idx');
+          const id = btn.getAttribute('data-id');
+          const oldDesc = decodeURIComponent(btn.getAttribute('data-desc'));
+          const descSpan = document.getElementById(`support-material-desc-${idx}`);
+          descSpan.innerHTML = `
+            <div class='mb-2'>
+              <input type='text' class='form-control form-control-sm mb-2' id='edit-support-desc-input-${idx}' value="${oldDesc}">
+              <input type='file' accept='*' class='form-control form-control-sm' id='edit-support-file-input-${idx}'>
+            </div>
+            <div class='d-flex gap-2'>
+              <button class='btn btn-sm btn-success save-edit-support-btn' data-id='${id}' data-idx='${idx}'>حفظ</button>
+              <button class='btn btn-sm btn-secondary cancel-edit-support-btn' data-idx='${idx}'>إلغاء</button>
+            </div>
+          `;
+          // Save handler
+          descSpan.querySelector('.save-edit-support-btn').onclick = function() {
+            const newDesc = document.getElementById(`edit-support-desc-input-${idx}`).value.trim();
+            const fileInput = document.getElementById(`edit-support-file-input-${idx}`);
+            if(!newDesc) { alert('الوصف مطلوب'); return; }
+            const formData = new FormData();
+            formData.append('description', newDesc);
+            if(fileInput.files.length > 0) {
+              formData.append('file', fileInput.files[0]);
+            }
+            fetch(`/support_material/${id}`, {
+              method: 'PUT',
+              body: formData
+            })
+            .then(r => r.json())
+            .then(resp => {
+              if(resp.success) loadSupportMaterials(levelId);
+              else alert(resp.error || 'فشل التعديل');
+            });
+          };
+          // Cancel handler
+          descSpan.querySelector('.cancel-edit-support-btn').onclick = function() {
+            loadSupportMaterials(levelId);
+          };
+        };
+      });
+    });
+}
+
+document.getElementById('supportMaterialUploadForm').onsubmit = function(e) {
+  e.preventDefault();
+  const levelId = document.getElementById('support-material-level-id').value;
+  const fileInput = document.getElementById('support-material-file');
+  const descInput = document.getElementById('support-material-desc');
+  if (!fileInput.files.length || !descInput.value.trim()) return;
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  formData.append('description', descInput.value.trim());
+  fetch(`/levels/${levelId}/support_material`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(r => r.json())
+  .then(resp => {
+    if(resp.success) {
+      loadSupportMaterials(levelId);
+      fileInput.value = '';
+      descInput.value = '';
+    } else {
+      alert(resp.error || 'فشل رفع الملف');
+    }
+  })
+  .catch(() => alert('حدث خطأ أثناء رفع الملف'));
+};
+</script>
+
+<style>
+.btn-support-material {
+  background: #a259f7 !important;
+  color: #fff !important;
+}
+.btn-support-material:hover, .btn-support-material:focus {
+  background: #7c3aed !important;
+  color: #fff !important;
+}
+</style>
+<!-- Class Support Material Modal -->
+<div class="modal fade" id="classSupportMaterialModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#a259f7;color:#fff;">
+        <h5 class="modal-title">مواد الدعم الخاصة بمستوى الصف</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="class-support-material-list">
+        <!-- Support materials will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function openClassSupportMaterialModal(classId, levelId) {
+    fetch(`/levels/${levelId}/support_material`)
+      .then(r => r.json())
+      .then(materials => {
+        //console.log('Support Materials:', materials);
+        let html = '';
+        if (!materials || materials.length === 0) {
+          html = '<div class="text-muted">لا توجد مواد دعم لهذا المستوى</div>';
+        } else {
+          html = materials.map(m => {
+  let fileName = 'ملف غير متوفر';
+  // Use backend keys: filename and url
+  if (m.filename) {
+    fileName = m.filename;
+  } else if (m.url && m.url.trim() !== '') {
+    try {
+      fileName = m.url.split('/').pop();
+    } catch {
+      fileName = m.url;
+    }
+  }
+  const hasFile = m.url && m.url.trim() !== '';
+  return `<div class="card mb-2">
+    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center" style="gap: 10px;">
+      <div class="d-flex flex-column flex-md-row align-items-center" style="gap: 10px;">
+        ${hasFile ? `<a href="${m.url}" target="_blank" style="font-weight:bold; color:#6c63ff; text-decoration:underline; word-break:break-all;">${fileName}</a>` : `<span style="font-weight:bold; color:#999;">${fileName}</span>`}
+        <span class="ms-2">${m.description || ''}</span>
+      </div>
+      ${hasFile ? `<a href="${m.url}" download class="btn btn-sm btn-primary">تحميل</a>` : ''}
+    </div>
+  </div>`;
+}).join('');
+        }
+        document.getElementById('class-support-material-list').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('classSupportMaterialModal')).show();
+      });
+}
+</script>
+
+<!-- Recurring Event Delete Modal -->
+<div class="modal fade" id="recurringDeleteModal" tabindex="-1" aria-labelledby="recurringDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="recurringDeleteModalLabel">حذف حدث متكرر</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+      </div>
+      <div class="modal-body">
+        هل تريد حذف كل سلسلة التكرار لهذا الحدث، أم حذف هذا الحدث فقط؟
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="delete-series-btn">حذف السلسلة</button>
+        <button type="button" class="btn btn-warning" id="delete-occurrence-btn">حذف هذا الحدث فقط</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% include 'homework_modal.html' %}
+{% include 'announcement_modal.html' %}
+<script>
+// Announcement modal logic
+let currentAnnouncementClassId = null;
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('announcement-btn')) {
+    const classBlock = e.target.closest('.class-block');
+    currentAnnouncementClassId = classBlock ? classBlock.getAttribute('data-class-id') : null;
+    document.getElementById('announcementClassId').value = currentAnnouncementClassId;
+    // Fetch latest announcement for this class
+    fetch('/api/class/' + currentAnnouncementClassId + '/announcement')
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('announcementText').innerHTML = data && data.success && data.text ? data.text : '';
+        document.getElementById('announcementExpiry').value = data && data.success && data.expiry ? data.expiry : '';
+        var modal = new bootstrap.Modal(document.getElementById('announcementModal'));
+        modal.show();
+      });
+  }
+});
+
+document.getElementById('saveAnnouncementBtn').onclick = function() {
+  const classId = document.getElementById('announcementClassId').value;
+  const text = document.getElementById('announcementText').innerHTML;
+  const expiry = document.getElementById('announcementExpiry').value;
+  fetch('/api/class/' + classId + '/announcement', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text, expiry})
+  })
+  .then(r => r.json())
+  .then(resp => {
+    if (resp.success) {
+      bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
+      alert('تم حفظ الإعلان بنجاح');
+    } else {
+      alert('حدث خطأ أثناء حفظ الإعلان');
+    }
+  });
+};
+</script>
+</body>
+</html>
