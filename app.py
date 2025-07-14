@@ -9,6 +9,10 @@ print("Flask module path:", flask.__file__)
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from routes_super_badges import super_badges_bp
+from flask import request, jsonify
+from homework_utils import save_homework_files
+from flask import send_from_directory
+
 
 
 app = Flask(__name__)
@@ -1914,10 +1918,6 @@ def save_comment():
 app.register_blueprint(super_badges_bp)
 
 # --- HOMEWORK ENDPOINTS ---
-import sqlite3
-from flask import request, jsonify
-from app.homework_utils import save_homework_files
-from flask import send_from_directory
 
 @app.route('/api/homework/list/<int:class_id>', methods=['GET'])
 def list_homework(class_id):
