@@ -1,5 +1,5 @@
-Flask
-Werkzeug
+flask>=2.0.0
+werkzeug>=2.0.0
 Flask-SQLAlchemy
 Flask-Migrate
 SQLAlchemy
