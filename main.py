@@ -2680,6 +2680,10 @@ def calculate_student_subject_summary(student, exams, grades):
         'student_name', 'subject', 'term1', 'term2', 'term3', 'year_final', 'year_avg'
     using the same weighted average logic as continuous monitoring.
     """
+    import json
+    print(f"[DEBUG][summary] Called with student: {json.dumps(student, ensure_ascii=False)}")
+    print(f"[DEBUG][summary] Exams: {json.dumps(exams, ensure_ascii=False)}")
+    print(f"[DEBUG][summary] Grades: {json.dumps(grades, ensure_ascii=False)}")
     # Group exams by subject
     from collections import defaultdict
     subject_exams = defaultdict(list)
@@ -2687,6 +2691,7 @@ def calculate_student_subject_summary(student, exams, grades):
         subject_exams[exam['subject_name']].append(exam)
     summary = []
     for subject, subject_exs in subject_exams.items():
+        print(f"[DEBUG][summary] Subject: {subject}, Exams: {json.dumps(subject_exs, ensure_ascii=False)}")
         # Dawra averages (1,2,3)
         dawra_avgs = []
         for dawra in [1,2,3]:
@@ -2722,6 +2727,7 @@ def calculate_student_subject_summary(student, exams, grades):
             'year_final': year_final,
             'year_avg': year_avg
         })
+    print(f"[DEBUG][summary] Output summary: {json.dumps(summary, ensure_ascii=False)}")
     return summary
 
 @app.route('/api/score_card/<int:student_id>')
@@ -2735,6 +2741,33 @@ def api_score_card(student_id):
         conn.close()
         return jsonify({'error': 'Student not found'}), 404
     stu_id, stu_name, class_id = stu
+    # Get class info (teachers, level)
+    c.execute('''SELECT classes.name, l.name as level_name, t.name as teacher_name, tb.name as backup_teacher_name
+                 FROM classes
+                 LEFT JOIN levels l ON classes.level_id = l.id
+                 LEFT JOIN teachers t ON classes.teacher_id = t.id
+                 LEFT JOIN teachers tb ON classes.backup_teacher_id = tb.id
+                 WHERE classes.id = ?''', (class_id,))
+    class_row = c.fetchone()
+    class_info = {
+        'class_name': class_row[0] if class_row else '',
+        'level_name': class_row[1] if class_row else '',
+        'teacher_name': class_row[2] if class_row else '',
+        'backup_teacher_name': class_row[3] if class_row else ''
+    }
+    # Get school principal (prefer is_director, fallback to any super_admin with name)
+    c.execute("SELECT name, username FROM users WHERE role='local_admin' AND name IS NOT NULL ORDER BY (CASE WHEN is_director=1 OR is_director='1' THEN 0 ELSE 1 END), id ASC LIMIT 1")
+    principal_row = c.fetchone()
+    principal_name = ''
+    if principal_row:
+        principal_name = principal_row[0] if principal_row[0] else principal_row[1]
+    # Calculate school year (e.g., 2024-2025)
+    from datetime import datetime
+    today = datetime.now().date()
+    if today.month >= 9:
+        school_year = f"{today.year}-{today.year+1}"
+    else:
+        school_year = f"{today.year-1}-{today.year}"
     # Get exams (with subject) for this class - same as /api/grades/<class_id>
     c.execute('''SELECT exams.id, exams.name, exams.curriculum_group_id, cg.name as subject_name, exams.is_final, exams.weight, exams.dawra, exams.is_year_final
                  FROM exams LEFT JOIN curriculum_groups cg ON exams.curriculum_group_id = cg.id
@@ -2752,14 +2785,16 @@ def api_score_card(student_id):
         }
         for row in c.fetchall()
     ]
-    # Get grades for this student for these exams
-    exam_ids = [e['id'] for e in exams]
-    if exam_ids:
-        q_marks = ','.join(['?'] * len(exam_ids))
-        c.execute(f'SELECT exam_id, grade FROM grades WHERE student_id=? AND exam_id IN ({q_marks})', (student_id, *exam_ids))
-        grades = {str(row[0]): row[1] for row in c.fetchall()}
-    else:
-        grades = {}
+    # Get grades for this student for these exams, using the same mapping as /api/grades/<class_id>
+    c.execute('SELECT student_id, exam_id, grade FROM grades WHERE exam_id IN (SELECT id FROM exams WHERE class_id = ?)', (class_id,))
+    grade_map = {}
+    for student_id_row, exam_id_row, grade in c.fetchall():
+        grade_map[(student_id_row, exam_id_row)] = grade
+    grades = {}
+    for exam in exams:
+        grades[str(exam['id'])] = grade_map.get((stu_id, exam['id']), '')
+    # Now grades is a dict of {str(exam_id): grade} as expected by the summary function
+
     # Fetch publication dates for this class
     c = sqlite3.connect('ArabicSchool.db').cursor()
     c.execute('''SELECT dawra1_pub_start, dawra2_pub_start, dawra3_pub_start, year_pub_start FROM classes WHERE id=?''', (class_id,))
@@ -2772,7 +2807,7 @@ def api_score_card(student_id):
     } if pub_row else {}
     # Current date (from user context)
     from datetime import datetime
-    today = datetime.strptime('2025-07-09', '%Y-%m-%d').date()
+    today = datetime.now().date()
     # Helper: check if pub date is set and <= today
     def is_published(pub_date):
         if not pub_date: return False
@@ -2798,13 +2833,18 @@ def api_score_card(student_id):
             row['year_final'] = None
             row['year_avg'] = None
     conn.close()
-    return jsonify({
+    debug_data = {
         'student': student_obj,
         'exams': exams,
         'grades': grades,
         'summary': summary,
-        'publication_dates': pub_dates
-    })
+        'publication_dates': pub_dates,
+        'class_info': class_info,
+        'principal_name': principal_name,
+        'school_year': school_year
+    }
+    print(f"[DEBUG][api_score_card] student_id={student_id} response: {json.dumps(debug_data, ensure_ascii=False)}")
+    return jsonify(debug_data)
 
 if __name__ == '__main__':
     init_db()

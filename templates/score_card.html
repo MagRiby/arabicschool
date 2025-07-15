@@ -45,12 +45,25 @@
         <h1 style="font-size:2.1rem; font-weight:bold; margin-bottom:0;">{{ school_info.name }}</h1>
     </div>
     <div class="score-card">
-        <h3 class="mb-3 text-center" style="color:#1769aa; font-weight:700;">
+        <div class="text-center mb-3">
+            <span style="display:inline-block; background:linear-gradient(90deg,#ff9800,#ffc107 80%); color:#fff3e0; font-size:2.21rem; font-weight:900; letter-spacing:2px; border-radius:1.2rem; padding:0.4rem 2.2rem; box-shadow:0 2px 12px #ff980080; border:2px solid #ff9800; margin-bottom:0.2rem; text-shadow:0 2px 6px #ff980066;">بطاقة الدرجات</span>
+        </div>
+        <h3 class="mb-1 text-center" style="color:#1769aa; font-weight:700;">
             <span id="student-name" style="font-family:inherit; font-size:inherit; font-weight:inherit; color:#7c3aed;"></span>
         </h3>
-        <div class="mb-2 text-center" style="font-size:1.02rem; color:#222; font-weight:500;">
+        <div class="mb-3 text-center" style="font-size:1.02rem; color:#222; font-weight:500;">
             <span id="class-name"></span>
             <span id="class-level" style="color:#444;"></span>
+            <span id="school-year" class="mx-2" style="color:#1769aa; font-weight:600;"></span>
+        </div>
+        <div class="row mb-3 justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-2 mb-2" style="background:#f6f8fa; border:none;">
+                    <div><b>المعلم الأساسي:</b> <span id="teacher-name"></span></div>
+                    <div><b>المعلم الاحتياطي:</b> <span id="backup-teacher-name"></span></div>
+                    <div><b>مدير المدرسة:</b> <span id="principal-name"></span></div>
+                </div>
+            </div>
         </div>
         <h4 class="text-center mt-4 mb-3" style="color:#e6b800;">ملخص المعدلات السنوية</h4>
         <div id="score-content">
@@ -91,14 +104,16 @@
         function renderScoreCard(data) {
     // Populate student info
     document.getElementById('student-name').textContent = data.student.name;
-    // Fetch class name/level via exams (first exam's subject/class info if available)
-    let className = '', classLevel = '';
-    if (data.exams.length > 0) {
-        // Optionally: could fetch from backend, but not in this API
-        // Leave blank or add logic if needed
+    // Populate class info, level, teacher, principal, school year
+    if (data.class_info) {
+        document.getElementById('class-name').textContent = data.class_info.class_name ? `الصف: ${data.class_info.class_name}` : '';
+        document.getElementById('class-level').textContent = data.class_info.level_name ? ` | المستوى: ${data.class_info.level_name}` : '';
+        document.getElementById('teacher-name').textContent = data.class_info.teacher_name || '-';
+        document.getElementById('backup-teacher-name').textContent = data.class_info.backup_teacher_name || '-';
     }
-    document.getElementById('class-name').textContent = className;
-    document.getElementById('class-level').textContent = classLevel;
+    document.getElementById('principal-name').textContent = data.principal_name || '-';
+    document.getElementById('school-year').textContent = data.school_year ? `السنة الدراسية: ${data.school_year}` : '';
+
     // Use backend-calculated summary for table
     let rows = '';
     let hasData = false;
@@ -148,6 +163,7 @@
             fetch(`/api/score_card/${studentId}`)
                 .then(r => r.json())
                 .then(data => {
+                    console.log('[DEBUG][score_card] Received data:', data);
                     if (data.error) {
                         showScoreError(data.error);
                     } else {
