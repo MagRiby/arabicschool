@@ -1,2 +1,13 @@
-http://127.0.0.1:5050/uploads/ is accessible without login
-NOT all APIS are protected by LOGIN , example: /api/student/<int:student_id>/super_badges/notes (http://127.0.0.1:5050//api/student/21/super_badges/notes)
+1-http://127.0.0.1:5050/uploads/ is accessible without login
+
+2-NOT all APIS are protected by LOGIN , example: /api/student/<int:student_id>/super_badges/notes (http://127.0.0.1:5050//api/student/21/super_badges/notes)
+ 
+3-when grouping students by class, the routes keeps being called :
+[DEBUG] /students/search called with query: ''
+127.0.0.1 - - [14/Jul/2025 21:47:52] "GET /students/search?query= HTTP/1.1" 200 -
+[DEBUG] /students/search called with query: ''
+127.0.0.1 - - [14/Jul/2025 21:47:52] "GET /students/search?query= HTTP/1.1" 200 -
+[DEBUG] /students/search called with query: ''
+127.0.0.1 - - [14/Jul/2025 21:47:52] "GET /students/search?query= HTTP/1.1" 200 -
+
+4-

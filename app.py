@@ -1413,7 +1413,7 @@ def get_students():
     if role == 'teacher':
         teacher_id = session.get('teacher_id')
         # Only show students in classes assigned to this teacher
-        c.execute('''SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name
+        c.execute('''SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, c.id as class_id
                      FROM students s
                      LEFT JOIN users u ON s.email = u.username
                      LEFT JOIN classes c ON s.class_id = c.id
@@ -1421,7 +1421,7 @@ def get_students():
                      ORDER BY s.id DESC''', (teacher_id, teacher_id))
         rows = c.fetchall()
     else:
-        c.execute('''SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name
+        c.execute('''SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, c.id as class_id
                      FROM students s
                      LEFT JOIN users u ON s.email = u.username
                      LEFT JOIN classes c ON s.class_id = c.id
@@ -1438,10 +1438,15 @@ def get_students():
             'alerts': row[6] or '',
             'date_of_birth': row[7] or '',
             'secondary_email': row[8] or '',
-            'class_name': row[9] or 'بدون صف'
+            'class_name': row[9] or 'بدون صف',
+            'class_id': row[10]
         } for row in rows
     ]
     conn.close()
+    print(students)
+    # Defensive: always return a list
+    if not isinstance(students, list):
+        students = [students]
     return jsonify(students)
 
 # --- Backend-driven student search endpoint ---
@@ -1458,7 +1463,7 @@ def search_students():
         teacher_id = session.get('teacher_id')
         if not query:
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1468,7 +1473,7 @@ def search_students():
         else:
             like_query = f'%{query}%'
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1480,7 +1485,7 @@ def search_students():
     else:
         if not query:
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1489,7 +1494,7 @@ def search_students():
         else:
             like_query = f'%{query}%'
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1505,7 +1510,8 @@ def search_students():
             'phone': row[4] or '',
             'notes': row[5] or '',
             'alerts': row[6] or '',
-            'class_name': row[7] or 'بدون صف'
+            'class_name': row[7] or 'بدون صف',
+            'class_id': row[8]
         } for row in rows
     ]
     conn.close()

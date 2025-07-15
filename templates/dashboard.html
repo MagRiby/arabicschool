@@ -1293,6 +1293,8 @@ function attachStudentCardHandlers() {
     if(menu.style.display === 'none') {
       fetch('/classes').then(r => r.json()).then(classes => {
         const dropdown = menu.querySelector('.class-dropdown');
+        console.log('[DEBUG]  currentClassId:', classes);
+        console.log('[DEBUG]  currentClassId:', currentClassId);
         let options = `<option value=""${!currentClassId ? ' selected' : ''}>لا شيء</option>`;
         options += classes.map(cls => 
           `<option value="${cls.id}"${String(cls.id) === String(currentClassId) ? ' selected' : ''}>${cls.name}</option>`
@@ -1553,10 +1555,10 @@ function fetchAndRenderStudents() {
     let html = '';
     if (!groupByClass) {
       students.forEach(s => {
-        console.log('[DEBUG] Student:', s.id, s.name, 'class_id:', s.class_name);
+        //console.log('[DEBUG] Student:', s);
       });
       html = students.map(s => `
-        <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_name || ''}'>
+        <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_id || ''}'>
           <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
             <div>
               <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''}</span>
@@ -2068,7 +2070,7 @@ bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
     
 
       let html = students.map(s => `
-        <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_name || ''}'>
+        <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_id || ''}'>
           <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
             <div>
               <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''}</span>
