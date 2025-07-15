@@ -1,4 +1,8 @@
 # This file was moved from the root directory for Vercel compatibility.
 # All logic remains unchanged.
 
-from app import app
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import app
+application = app.app
