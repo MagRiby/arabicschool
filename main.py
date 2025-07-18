@@ -8,6 +8,7 @@ print("Flask version:", flask.__version__)
 print("Flask module path:", flask.__file__)
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from routes_super_badges import super_badges_bp
 from flask import request, jsonify
 from homework_utils import save_homework_files
@@ -18,6 +19,71 @@ from flask import send_from_directory
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'default-secret-key')
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB file upload limit
+
+# --- Password Reset Token Serializer ---
+serializer = URLSafeTimedSerializer(app.secret_key)
+
+# --- Helper: Get user by email or username ---
+def get_user_by_username(identifier):
+    conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
+    c = conn.cursor()
+    c.execute('SELECT id, username FROM users WHERE username=?', (identifier,))
+    user = c.fetchone()
+    conn.close()
+    return user  # (id, username) or None
+
+# --- Helper: Update password hash ---
+def update_user_password(user_id, new_password):
+    password_hash = generate_password_hash(new_password)
+    conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
+    c = conn.cursor()
+    c.execute('UPDATE users SET password_hash=? WHERE id=?', (password_hash, user_id))
+    conn.commit()
+    conn.close()
+
+# --- Helper: Print reset link (simulate email) ---
+def send_reset_email(username, token):
+    reset_url = url_for('reset_password', token=token, _external=True)
+    print(f"[RESET LINK] For {username}: {reset_url}")
+
+# --- Forgot Password Route ---
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    message = None
+    if request.method == 'POST':
+        identifier = request.form['email'].strip()
+        user = get_user_by_username(identifier)
+        if user:
+            user_id, username = user
+            token = serializer.dumps({'user_id': user_id}, salt='reset-password')
+            send_reset_email(username, token)
+            message = 'A reset link has been sent (check console in local dev).'
+        else:
+            message = 'No user found with that username.'
+    return render_template('forgot_password.html', message=message)
+
+# --- Reset Password Route ---
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    message = None
+    try:
+        data = serializer.loads(token, salt='reset-password', max_age=3600)  # 1 hour expiry
+        user_id = data['user_id']
+    except SignatureExpired:
+        return render_template('reset_password.html', message='This reset link has expired.')
+    except BadSignature:
+        return render_template('reset_password.html', message='Invalid or tampered reset link.')
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+        if len(new_password) < 6:
+            message = 'Password must be at least 6 characters.'
+        else:
+            update_user_password(user_id, new_password)
+            message = 'Your password has been reset. You can now log in.'
+            return render_template('reset_password.html', message=message)
+    return render_template('reset_password.html', message=message)
+
 
 from config import UPLOAD_FOLDER
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -249,6 +315,7 @@ def register_super_admin():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -284,7 +351,8 @@ def login():
                 students = c2.fetchall()
                 conn2.close()
                 if not students:
-                    return 'Student record not found for this user.', 404
+                    error = 'Student record not found for this user.'
+                    return render_template('login.html', error=error)
                 # Filter out students with no class_id
                 students_with_class = [s for s in students if s[1] is not None]
                 if len(students_with_class) == 1:
@@ -304,9 +372,11 @@ def login():
                     ]
                     return render_template('select_student.html', students=student_cards)
                 else:
-                    return 'You are not assigned to a class yet. Please contact admin.', 400
+                    error = 'You are not assigned to a class yet. Please contact admin.'
+                    return render_template('login.html', error=error)
             return redirect(url_for('dashboard'))
-        return 'Invalid credentials', 401
+        error = 'Invalid credentials'
+        return render_template('login.html', error=error)
     return render_template('login.html')
 
 @app.route('/logout')
@@ -1879,20 +1949,39 @@ def student_abilities(student_id, class_id):
         return jsonify({'success': True})
     # GET: Render page
     editable = session.get('role') in ('teacher', 'local_admin')
-    # Level badge info
+    # Level badge info (reduced to 3: first, third, fifth)
     level_badges = [
         { 'label': 'بحاجة لمتابعة', 'class': 'level-none', 'icon': '💡' },
-        { 'label': 'يتعلم', 'class': 'level-beginner', 'icon': '📖' },
-        { 'label': 'مشاركة جيدة', 'class': 'level-intermediate', 'icon': '👍' },
-        { 'label': 'جيد جداً', 'class': 'level-advanced', 'icon': '🥇' },
+        { 'label': 'متوسط', 'class': 'level-intermediate', 'icon': '👍' },
         { 'label': 'متميز', 'class': 'level-master', 'icon': '🏆' },
     ]
     # Fetch student name
     c.execute('SELECT name FROM students WHERE id=?', (student_id,))
     row = c.fetchone()
     student_name = row[0] if row else ''
-    conn.close()
-    return render_template('student_abilities.html', school_info=school_info, groups=groups, scores=scores, comments=comments, comment_meta=comment_meta, editable=editable, level_badges=level_badges, student_name=student_name, student_id=student_id, class_id=class_id, class_name=class_name, class_level=class_level)
+    # Fetch all active homeworks for this class (due_date >= today)
+    from datetime import datetime
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    conn2 = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
+    c2 = conn2.cursor()
+    c2.execute('SELECT id, due_date, description, files FROM homework WHERE class_id=? AND due_date >= ? ORDER BY due_date ASC', (class_id, today_str))
+    homework_rows = c2.fetchall()
+    conn2.close()
+    homeworks = []
+    for row in homework_rows:
+        files = []
+        if row[3]:
+            try:
+                files = row[3].split(';')
+            except Exception:
+                files = []
+        homeworks.append({
+            'id': row[0],
+            'due_date': row[1],
+            'description': row[2],
+            'files': files
+        })
+    return render_template('student_abilities.html', school_info=school_info, groups=groups, scores=scores, comments=comments, comment_meta=comment_meta, editable=editable, level_badges=level_badges, student_name=student_name, student_id=student_id, class_id=class_id, class_name=class_name, class_level=class_level, homeworks=homeworks)
 
 # --- Save single comment endpoint ---
 @app.route('/save_comment', methods=['POST'])

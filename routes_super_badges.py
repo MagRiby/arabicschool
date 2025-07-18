@@ -150,17 +150,32 @@ def get_super_badges_notes(student_id):
     )''')
     c.execute('SELECT note, updated_at, user FROM student_super_badges_notes WHERE student_id=?', (student_id,))
     row = c.fetchone()
-    conn.close()
-    if row:
-        return jsonify({'note': row[0], 'updated_at': row[1], 'user': row[2]})
-    else:
-        return jsonify({'note': '', 'updated_at': '', 'user': ''})
+    display_name = ''
+    if row and row[2]:
+        user_id = row[2]
+        # Try users table first
+        c.execute('SELECT name FROM users WHERE id=?', (user_id,))
+        user_row = c.fetchone()
+        if user_row and user_row[0]:
+            display_name = user_row[0]
+        else:
+            # Try teachers table
+            c.execute('SELECT name FROM teachers WHERE id=?', (user_id,))
+            teacher_row = c.fetchone()
+            if teacher_row and teacher_row[0]:
+                display_name = teacher_row[0]
+            else:
+                display_name = user_id
+    return jsonify({'note': row[0] if row else '', 'updated_at': row[1] if row else '', 'user': display_name})
 
 @super_badges_bp.route('/api/student/<int:student_id>/super_badges/notes', methods=['POST'])
 def save_super_badges_notes(student_id):
+    from flask import session
+    from datetime import datetime
     data = request.get_json()
     note = data.get('note', '').strip()
-    user = session.get('user_name', '')
+    # Always use the user ID from session for tracking
+    user_id = session.get('user_id', None)
     updated_at = datetime.now().strftime('%Y-%m-%d %H:%M')
     conn = sqlite3.connect('ArabicSchool.db')
     c = conn.cursor()
@@ -173,12 +188,12 @@ def save_super_badges_notes(student_id):
     c.execute('SELECT student_id FROM student_super_badges_notes WHERE student_id=?', (student_id,))
     exists = c.fetchone()
     if exists:
-        c.execute('UPDATE student_super_badges_notes SET note=?, updated_at=?, user=? WHERE student_id=?', (note, updated_at, user, student_id))
+        c.execute('UPDATE student_super_badges_notes SET note=?, updated_at=?, user=? WHERE student_id=?', (note, updated_at, str(user_id), student_id))
     else:
-        c.execute('INSERT INTO student_super_badges_notes (student_id, note, updated_at, user) VALUES (?, ?, ?, ?)', (student_id, note, updated_at, user))
+        c.execute('INSERT INTO student_super_badges_notes (student_id, note, updated_at, user) VALUES (?, ?, ?, ?)', (student_id, note, updated_at, str(user_id)))
     conn.commit()
     conn.close()
-    return jsonify({'success': True, 'updated_at': updated_at, 'user': user})
+    return jsonify({'success': True, 'updated_at': updated_at, 'user': user_id})
 
 # @super_badges_bp.route('/api/super_badges', methods=['POST'])
 # def add_super_badge():

@@ -38,14 +38,8 @@
         .badge-icon.selected.level-none {
             animation: glow-blue 1.1s infinite linear alternate;
         }
-        .badge-icon.selected.level-beginner {
-            animation: glow-yellow 1.1s infinite linear alternate;
-        }
         .badge-icon.selected.level-intermediate {
             animation: glow-green 1.1s infinite linear alternate;
-        }
-        .badge-icon.selected.level-advanced {
-            animation: glow-purple 1.1s infinite linear alternate;
         }
         .badge-icon.selected.level-master {
             animation: glow-red 1.1s infinite linear alternate;
@@ -54,17 +48,9 @@
             0% { box-shadow: 0 0 3.6px 0.6px #90caf9, 0 0 0 0 #90caf9; }
             100% { box-shadow: 0 0 9.6px 3.6px #42a5f5, 0 0 7.2px 3.6px #42a5f5; }
         }
-        @keyframes glow-yellow {
-            0% { box-shadow: 0 0 3.6px 0.6px #ffe082, 0 0 0 0 #ffe082; }
-            100% { box-shadow: 0 0 9.6px 3.6px #ffd600, 0 0 7.2px 3.6px #ffd600; }
-        }
         @keyframes glow-green {
             0% { box-shadow: 0 0 3.6px 0.6px #a5d6a7, 0 0 0 0 #a5d6a7; }
             100% { box-shadow: 0 0 9.6px 3.6px #43a047, 0 0 7.2px 3.6px #43a047; }
-        }
-        @keyframes glow-purple {
-            0% { box-shadow: 0 0 3.6px 0.6px #ce93d8, 0 0 0 0 #ce93d8; }
-            100% { box-shadow: 0 0 9.6px 3.6px #8e24aa, 0 0 7.2px 3.6px #8e24aa; }
         }
         @keyframes glow-red {
             0% { box-shadow: 0 0 3.6px 0.6px #ef9a9a, 0 0 0 0 #ef9a9a; }
@@ -75,9 +61,7 @@
             color: #b8860b;
             border: 2px solid #e53935;
         }
-        .badge-icon.selected.level-advanced { background: #a5d6a7; color: #1b5e20; border: 2px solid #1b5e20; }
         .badge-icon.selected.level-intermediate { background: #81d4fa; color: #01579b; border: 2px solid #01579b; }
-        .badge-icon.selected.level-beginner { background: #ffe082; color: #a67c00; border: 2px solid #a67c00; }
         .badge-icon.selected.level-none { background: #e0e0e0; color: #888; border: 2px solid #888; }
         .curriculum-table th, .curriculum-table td { text-align: center; vertical-align: middle; }
         .curriculum-table th { background: #e3f2fd; color: #1565c0; font-size: 1.1rem; }
@@ -242,26 +226,12 @@
             text-shadow: 0 1px 0 #fffbe7;
         }
         .info-content {
-    color: #444;
-    margin-bottom: 0.3rem;
-    text-align: center;
-    font-size: 1.08rem;
-    min-height: 2.1em;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    max-width: 95%;
-    white-space: pre-line;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 6;
-    -webkit-box-orient: vertical;
-}
-            color: #444;
-            margin-bottom: 0.3rem;
-            text-align: center;
-            font-size: 1.08rem;
-            min-height: 2.1em;
+            padding: 0;
+            width: 100%;
+            min-height: 40px;
+            overflow: visible;
+            word-break: break-word;
+            display: block;
         }
         .info-date {
             color: #888;
@@ -313,14 +283,43 @@
             </a>
         </div>
         {% endif %}
+        <!-- Homework Section -->
+        {% if homeworks and homeworks|length > 0 %}
+        <div class="mb-4 d-flex justify-content-center">
+            <div class="info-card w-100" style="max-width:700px; min-height: 220px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 2rem 1.5rem 1.5rem 1.5rem; overflow: visible; background: linear-gradient(135deg,#fffbe7 0%,#e3f0fa 100%); box-shadow: 0 8px 32px rgba(23,105,170,0.08); border-radius: 1.4rem;">
+                <div class="info-icon" title="واجب منزلي">📚</div>
+                <div class="info-label" style="margin-bottom:1.2rem;">الواجبات المنزلية</div>
+                <div class="info-content" style="padding:0; overflow-y: auto; max-height: 300px;">
+                    <ul class="list-unstyled mb-0" style="padding-right:0;">
+                        {% for hw in homeworks %}
+                        <li style="border-bottom:1px solid #e3f0fa; padding: 0.7rem 0;">
+                            <div style="font-weight:600; color:#1769aa;">{{ hw.description or 'بدون عنوان' }}</div>
+                            <div class="info-date" style="margin-bottom:0.2rem;">تاريخ التسليم: {{ hw.due_date }}</div>
+                            {% if hw.files and hw.files|length > 0 %}
+                            <div style="margin-bottom:0.2rem;">
+                                <span style="color:#1769aa;font-weight:500;">المستندات:</span>
+                                {% for file in hw.files %}
+                                    <a href="/uploads/class_{{ class_id }}/{{ file }}" target="_blank" style="color:#0d47a1;word-break:break-all;">{{ file }}</a>{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
         <!-- Super Badges Section -->
         <div id="student-info-cards" class="student-info-cards d-flex flex-wrap gap-3 mb-4 justify-content-center"></div>
-        <div class="super-badges-title" style="text-align:center; font-size:2.2rem; font-weight:bold; margin: 32px 0 8px 0; color:#e6b800; display:flex; align-items:center; justify-content:center; gap:16px;">
-            <span>الشارات المميزة</span>
-            <button id="super-badges-notes-btn" class="super-badge-notes-btn" title="ملاحظات الشارات" type="button">
-                <span id="super-badges-notes-icon">...</span>
-            </button>
-        </div>
+        <div class="super-badges-title" style="text-align:center; font-size:2.2rem; font-weight:bold; margin: 32px 0 8px 0; color:#e6b800; display:flex; align-items:center; justify-content:center; gap:18px;">
+    <span style="flex:unset; display:flex; align-items:center; gap:10px;">
+        <span>الشارات المميزة</span>
+        <button id="super-badges-notes-btn" class="super-badge-notes-btn" title="ملاحظات الشارات" type="button" style="padding:0; margin:0; vertical-align:middle; display:flex; align-items:center; justify-content:center;">
+    <span id="super-badges-notes-icon" style="font-size:1.55rem; min-width:110px; min-height:66px; padding:10px 21px; border-radius:15px; background:#ffeaea; color:#e53935; font-weight:bold; display:flex; align-items:center; justify-content:center; text-align:center;">...</span>
+</button>
+    </span>
+</div>
 
         <div id="super-badges-row" class="super-badges-row"></div>
         {% if editable %}
@@ -463,9 +462,9 @@ document.addEventListener('DOMContentLoaded', function() {
         container.addEventListener('click', function(e) {
             if(e.target.classList.contains('badge-icon')) {
                 const badges = container.querySelectorAll('.badge-icon');
-                badges.forEach(b => b.classList.remove('selected', 'level-none', 'level-beginner', 'level-intermediate', 'level-advanced', 'level-master'));
+                badges.forEach(b => b.classList.remove('selected', 'level-none', 'level-intermediate', 'level-master'));
                 const level = e.target.getAttribute('data-level');
-                const badgeClass = e.target.className.match(/level-\w+/);
+                const badgeClass = e.target.className.match(/level-(none|intermediate|master)/);
                 e.target.classList.add('selected');
                 if (badgeClass) e.target.classList.add(badgeClass[0]);
                 // Set hidden input value
@@ -737,7 +736,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const resp = await fetch(`/api/student/${studentId}/super_badges/notes`);
             const data = await resp.json();
             if (data && data.note && data.note.trim().length > 0) {
-                icon.textContent = 'م';
+                icon.textContent = 'ملاحظات';
                 btn.classList.add('has-note');
                 btn.classList.remove('no-note');
             } else {
@@ -766,7 +765,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const resp = await fetch(`/api/student/${studentId}/super_badges/notes`);
                 const data = await resp.json();
                 document.getElementById('superBadgesNotesText').value = data && data.note ? data.note : '';
-                document.getElementById('super-badges-notes-meta-info').textContent = data && data.updated_at ? `آخر تعديل: ${data.updated_at}${data.user ? ' بواسطة ' + data.user : ''}` : '';
+                let metaText = '';
+if (data && (data.updated_at || data.user)) {
+  if (data.updated_at) metaText += 'آخر تعديل: ' + data.updated_at;
+  if (data.user) metaText += ' بواسطة ' + data.user;
+}
+document.getElementById('super-badges-notes-meta-info').textContent = metaText;
                 if (superBadgesNotesModal) superBadgesNotesModal.show();
             });
         }
@@ -782,7 +786,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 const data = await resp.json();
                 if (data.success) {
-                    document.getElementById('super-badges-notes-meta-info').textContent = data && data.updated_at ? `آخر تعديل: ${data.updated_at}${data.user ? ' بواسطة ' + data.user : ''}` : '';
+                    let metaText = '';
+if (data && (data.updated_at || data.user)) {
+  if (data.updated_at) metaText += 'آخر تعديل: ' + data.updated_at;
+  if (data.user) metaText += ' بواسطة ' + data.user;
+}
+document.getElementById('super-badges-notes-meta-info').textContent = metaText;
                     if (superBadgesNotesModal) superBadgesNotesModal.hide();
                     updateSuperBadgesNotesIcon();
                 } else {
@@ -855,14 +864,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         // --- Render Cards ---
         infoCardsDiv.innerHTML = '';
-        // Homework Card
-        infoCardsDiv.innerHTML += `<div class="info-card work-card" tabindex="0" role="button" onclick="window.showHomeworkModal && window.showHomeworkModal(${classId})" title="تفاصيل الواجب">
-          <div class="info-icon">📚</div>
-          <div class="info-label">الواجب القادم</div>
-          <div class="info-content">${nextHw ? nextHw.description : 'لا يوجد واجب قادم'}</div>
-          ${nextHw && nextHw.files && nextHw.files.length > 0 ? `<div class="info-files" style="text-align:center;margin-top:5px;"><b>المستندات:</b><br>${nextHw.files.map(fname => `<a href="/uploads/class_${classId}/${fname}" target="_blank" style="display:inline-block;margin:2px 0;">${fname}</a>`).join('<br>')}</div>` : ''}
-          <div class="info-date">${nextHw ? 'تاريخ التسليم: ' + formatDateAr(nextHw.due_date) : ''}</div>
-        </div>`;
+
         // Event Card
         infoCardsDiv.innerHTML += `<div class="info-card event-card" tabindex="0" role="button" onclick="window.showEventModal && window.showEventModal(${classId})" title="تفاصيل الحدث">
           <div class="info-icon">📅</div>
@@ -912,17 +914,40 @@ document.addEventListener('DOMContentLoaded', function() {
         filter: grayscale(1) blur(1px);
       }
       .super-badge-notes-btn {
-        border: none !important;
-        background: none !important;
-        padding: 0 !important;
-        margin: 0 6px !important;
-        outline: none !important;
-        box-shadow: none !important;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+  border: none !important;
+  background: none !important;
+  padding: 0 !important;
+  margin: 0 6px !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+.super-badge-notes-btn #super-badges-notes-icon {
+  font-size: 1.1rem;
+  min-width: 60px;
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: #ffeaea;
+  color: #e53935;
+  font-weight: bold;
+  display: inline-block;
+  margin: 0;
+}
+.super-badge-notes-btn.has-note #super-badges-notes-icon {
+  background: #ffeaea !important;
+  color: #e53935 !important;
+  font-weight: bold !important;
+}
+.super-badge-notes-btn.no-note #super-badges-notes-icon {
+  background: #f3f3f3 !important;
+  color: #888 !important;
+  font-weight: normal !important;
+}
       .super-badge-notes-btn:focus {
         outline: none !important;
         box-shadow: none !important;

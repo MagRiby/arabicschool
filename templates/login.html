@@ -34,6 +34,11 @@
     <div class="login-container">
         <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="logo" class="logo">
         <div class="login-title">تسجيل الدخول للنظام</div>
+        {% if error %}
+            <div class="alert alert-danger text-center" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
         <form method="POST">
             <div class="mb-3">
                 <label for="username" class="form-label">اسم المستخدم</label>
@@ -48,6 +53,9 @@
             {% endif %}
             <button type="submit" class="btn btn-primary">دخول</button>
         </form>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('forgot_password') }}">هل نسيت كلمة المرور؟</a>
+        </div>
     </div>
 </body>
 </html>
