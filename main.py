@@ -2337,7 +2337,7 @@ def delete_exam(exam_id):
     return jsonify({'success': True})
 
 @app.route('/api/grades/<int:class_id>', methods=['GET'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def list_grades(class_id):
     conn = sqlite3.connect('ArabicSchool.db')
     c = conn.cursor()
@@ -2375,7 +2375,7 @@ def list_grades(class_id):
     return jsonify({'students': students, 'exams': exams})
 
 @app.route('/api/grades/<int:class_id>', methods=['POST'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def update_grades(class_id):
     data = request.get_json()
     grades = data.get('grades', [])  # List of dicts: {student_id, exam_id, grade}
@@ -2398,7 +2398,7 @@ def update_grades(class_id):
     return jsonify({'success': True})
 
 @app.route('/continuous_monitoring/<int:class_id>')
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def continuous_monitoring(class_id):
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()
@@ -2409,7 +2409,7 @@ def continuous_monitoring(class_id):
     return render_template('continuous_monitoring.html', class_id=class_id, class_name=class_name)
 
 @app.route('/attendance/<int:class_id>')
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def attendance(class_id):
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()
@@ -2420,7 +2420,7 @@ def attendance(class_id):
     return render_template('attendance.html', class_id=class_id, class_name=class_name)
 
 @app.route('/api/attendance/<int:class_id>', methods=['GET'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def get_attendance(class_id):
     import datetime
     week_start_str = request.args.get('week_start')
@@ -2452,7 +2452,7 @@ def get_attendance(class_id):
     return jsonify({'students': students, 'attendance': attendance})
 
 @app.route('/api/attendance/<int:class_id>', methods=['POST'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def update_attendance(class_id):
     data = request.get_json()
     student_id = data.get('student_id')

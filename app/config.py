@@ -20,13 +20,13 @@ class Config:
     # Caching
     CACHE_TYPE = 'simple'  # Can be 'redis', 'memcached', etc. in production
     
-    # Email (configure these in production)
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.example.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@arabicschool.com')
+    # Email (Gmail SMTP for demo; use environment variables in production)
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = 'arabicschooldemo@gmail.com'
+    MAIL_PASSWORD = 'vlpb gclx kxru fkdw'
+    MAIL_DEFAULT_SENDER = 'arabicschooldemo@gmail.com'
 
 
 class DevelopmentConfig(Config):
