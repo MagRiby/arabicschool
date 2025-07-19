@@ -41,9 +41,24 @@ def update_user_password(user_id, new_password):
     conn.commit()
     conn.close()
 
-# --- Helper: Print reset link (simulate email) ---
+# --- Helper: Send reset link via email ---
+from flask_mail import Mail, Message
+
+# Initialize Flask-Mail
+mail = Mail(app)
+
 def send_reset_email(username, token):
     reset_url = url_for('reset_password', token=token, _external=True)
+    msg = Message(
+        subject="Password Reset Request",
+        recipients=[username],  # username is the user's email address
+        body=f"Hello,\n\nTo reset your password, click the following link:\n{reset_url}\n\nIf you did not request a password reset, please ignore this email."
+    )
+    try:
+        mail.send(msg)
+        print(f"[EMAIL SENT] Password reset link sent to {username}")
+    except Exception as e:
+        print(f"[EMAIL ERROR] Could not send password reset email to {username}: {e}")
     print(f"[RESET LINK] For {username}: {reset_url}")
 
 # --- Forgot Password Route ---

@@ -27,6 +27,7 @@ class Config:
     MAIL_USERNAME = 'arabicschooldemo@gmail.com'
     MAIL_PASSWORD = 'vlpb gclx kxru fkdw'
     MAIL_DEFAULT_SENDER = 'arabicschooldemo@gmail.com'
+    MAIL_SUPPRESS_SEND = False
 
 
 class DevelopmentConfig(Config):
