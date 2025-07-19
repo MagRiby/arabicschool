@@ -17,6 +17,8 @@ from flask import send_from_directory
 
 
 app = Flask(__name__)
+# Load configuration from app/config.py Config class
+app.config.from_object('app.config.Config')
 app.secret_key = os.environ.get('SECRET_KEY', 'default-secret-key')
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # 20 MB file upload limit
 
@@ -45,6 +47,7 @@ def update_user_password(user_id, new_password):
 from flask_mail import Mail, Message
 
 # Initialize Flask-Mail
+
 mail = Mail(app)
 
 def send_reset_email(username, token):
