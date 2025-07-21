@@ -1167,7 +1167,7 @@ def add_class_announcement(class_id):
 @login_required('super_admin', 'local_admin', 'teacher')
 def list_classes():
     import sqlite3
-    from flask import session
+    from flask import session, request, jsonify
     print("[DEBUG] /classes endpoint called")
     print(f"[DEBUG] session: {dict(session)}")
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
@@ -1175,6 +1175,7 @@ def list_classes():
     role = session.get('role')
     user_id = session.get('user_id')
     print(f"[DEBUG] role={role}, user_id={user_id}")
+    group_by = request.args.get('group_by', 'level')
     if role == 'teacher':
         teacher_id = session.get('teacher_id')
         print(f"[DEBUG] teacher_id from session: {teacher_id}")
@@ -1247,7 +1248,20 @@ def list_classes():
             'year_pub_end': row[15],
         })
     conn.close()
-    return jsonify(classes)
+    # Grouping logic
+    if group_by == 'none':
+        return jsonify({'flat': classes, 'group_by': group_by})
+    grouped = {}
+    key_map = {
+        'level': 'level_name',
+        'teacher': 'teacher_name',
+        'assistant': 'backup_teacher_name'
+    }
+    key = key_map.get(group_by, 'level_name')
+    for cls in classes:
+        group_val = cls.get(key) or '\u063a\u064a\u0631 \u0645\u062d\u062f\u062f'
+        grouped.setdefault(group_val, []).append(cls)
+    return jsonify({'grouped': grouped, 'group_by': group_by})
 
 
 @app.route('/classes', methods=['POST'])
@@ -2955,4 +2969,4 @@ def api_score_card(student_id):
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5050)
+    app.run(debug=True, port=5000)
