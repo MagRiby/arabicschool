@@ -1270,9 +1270,21 @@ def add_class():
     data = request.json
     name = data['name']
     level_id = data.get('level_id')
+    teacher_id = data.get('teacher_id')
+    backup_teacher_id = data.get('backup_teacher_id')
+    print('[DEBUG] Received:', name, level_id, teacher_id, backup_teacher_id)
+    # Apply edit logic: cast to int if not None/empty, else None
+    level_id = int(level_id) if level_id not in (None, '', 'null', 'undefined') else None
+    teacher_id = int(teacher_id) if teacher_id not in (None, '', 'null', 'undefined') else None
+    backup_teacher_id = int(backup_teacher_id) if backup_teacher_id not in (None, '', 'null', 'undefined') else None
+    print('[DEBUG] Processed:', name, level_id, teacher_id, backup_teacher_id)
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()
-    c.execute('INSERT INTO classes (name, local_admin_id, level_id) VALUES (?, ?, ?)', (name, session['user_id'], level_id))
+    sql = 'INSERT INTO classes (name, local_admin_id, level_id, teacher_id, backup_teacher_id) VALUES (?, ?, ?, ?, ?)'
+    values = (name, session['user_id'], level_id, teacher_id, backup_teacher_id)
+    print('[DEBUG] SQL:', sql)
+    print('[DEBUG] VALUES:', values)
+    c.execute(sql, values)
     conn.commit()
     conn.close()
     return jsonify({'success': True})
