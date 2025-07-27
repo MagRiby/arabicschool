@@ -231,7 +231,13 @@
         .then(data => {
           const area = document.getElementById('announcement-content');
           const ann = data.announcement;
-          if (ann && ann.text) {
+          function isAnnouncementExpired(expiry) {
+            if (!expiry) return false;
+            const now = new Date();
+            const exp = new Date(expiry);
+            return now > exp;
+          }
+          if (ann && ann.text && !isAnnouncementExpired(ann.expiry)) {
             area.innerHTML = `<div style='font-size:1.1em;'><b>إعلان عام:</b><br>${ann.text}</div><div style='font-size:0.95em;color:#666;'>ساري حتى: ${ann.expiry ? ann.expiry.replace('T', ' ') : ''}</div>`;
           } else {
             area.innerHTML = '<span>لا يوجد إعلان عام حالياً</span>';
@@ -505,13 +511,13 @@
           <!-- Other Settings Tab -->
           <div class="tab-pane fade" id="other-settings" role="tabpanel">
   {% if role in ['super_admin', 'local_admin'] %}
-    <button class="btn btn-warning mb-3 w-100" id="open-announcement-modal-btn">إرسال إعلان عام</button>
+    <button class="btn btn-warning mb-3 w-100" id="open-announcement-modal-btn">إعلان عام</button>
     {% include 'announcement-modal.html' %}
   {% endif %}
             <a href="/super_badges" class="btn btn-warning mb-3 w-100">شارات مميزة</a>
             <a href="/manage_local_admins" class="btn btn-warning mb-3 w-100">إدارة المدراء المحليين</a>
 <a href="/school_info" class="btn btn-warning mb-3 w-100">معلومات المدرسة</a>
-            <div class="alert alert-secondary">لا توجد إعدادات أخرى حالياً.</div>
+
           </div>
         </div>
         {% endif %}
