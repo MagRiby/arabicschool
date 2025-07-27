@@ -156,9 +156,11 @@ let currentDawra = 1; // 1, 2, or 3
 
 // Utility: show modal
 async function showExamModal(exam = null) {
+    console.log('[showExamModal] called', { exam });
     // If editing, infer final mode from exam
     if (exam) {
         examModalFinalMode = exam.is_final == 1;
+        console.log('[showExamModal] edit mode, examModalFinalMode:', examModalFinalMode);
     }
 
     document.getElementById('exam-form').reset();
@@ -172,16 +174,35 @@ async function showExamModal(exam = null) {
     // Fetch class info to get level_id
     try {
         const classRes = await fetch('/classes');
-        const classes = await classRes.json();
-        const thisClass = classes.find(cls => cls.id == classId);
+        const classesJson = await classRes.json();
+        let classesArr = [];
+        if (Array.isArray(classesJson)) {
+            classesArr = classesJson;
+        } else if (Array.isArray(classesJson.classes)) {
+            classesArr = classesJson.classes;
+        } else if (classesJson.grouped && typeof classesJson.grouped === 'object') {
+            // Flatten all arrays in grouped
+            classesArr = Object.values(classesJson.grouped).reduce((acc, arr) => acc.concat(arr), []);
+        }
+        if (!Array.isArray(classesArr)) {
+            console.error('[showExamModal] /classes did not return a usable array:', classesJson);
+            subjectSelect.innerHTML = '<option value="">تعذر تحميل المواد</option>';
+            return;
+        }
+        const thisClass = classesArr.find(cls => cls.id == classId);
         levelId = thisClass ? thisClass.level_id : null;
-    } catch (e) { levelId = null; }
+        console.log('[showExamModal] fetched classes:', classesArr, 'thisClass:', thisClass, 'levelId:', levelId);
+    } catch (e) {
+        levelId = null;
+        console.error('[showExamModal] error fetching classes:', e);
+    }
     if (!levelId) {
         subjectSelect.innerHTML = '<option value="">تعذر تحميل المواد</option>';
+        console.warn('[showExamModal] NO levelId found, returning early.');
         return;
     }
     // Fetch curriculum groups for this level
-    fetch(`/curriculum_groups?level_id=${levelId}`)
+    fetch(`/curriculum_groups?level_id=${levelId}`, { credentials: 'include' })
       .then(r => r.json())
       .then(groups => {
         subjectSelect.innerHTML = '<option value="">اختر المادة</option>' +
@@ -190,7 +211,12 @@ async function showExamModal(exam = null) {
         if (exam && exam.curriculum_group_id) {
           subjectSelect.value = exam.curriculum_group_id;
         }
+        console.log('[showExamModal] curriculum groups loaded:', groups);
+      })
+      .catch(e => {
+        console.error('[showExamModal] error fetching curriculum groups:', e);
       });
+    console.log('[showExamModal] About to show modal');
     const modal = new bootstrap.Modal(document.getElementById('examModal'));
     modal.show();
 }
@@ -198,7 +224,9 @@ async function showExamModal(exam = null) {
 function attachExamButtonListeners(dawra) {
     // Add Exam
     document.querySelectorAll(`#dawra${dawra}-content .add-exam-btn`).forEach(btn => {
+        console.log(`[DEBUG] Attaching add-exam-btn listener for dawra`, dawra, btn);
         btn.onclick = () => {
+            console.log(`[DEBUG] add-exam-btn clicked for dawra`, dawra, btn);
             currentDawra = parseInt(btn.getAttribute('data-dawra')) || currentDawra;
             examModalFinalMode = false;
             showExamModal(null);
@@ -206,7 +234,9 @@ function attachExamButtonListeners(dawra) {
     });
     // Add Final Exam
     document.querySelectorAll(`#dawra${dawra}-content .add-final-exam-btn`).forEach(btn => {
+        console.log(`[DEBUG] Attaching add-final-exam-btn listener for dawra`, dawra, btn);
         btn.onclick = () => {
+            console.log(`[DEBUG] add-final-exam-btn clicked for dawra`, dawra, btn);
             currentDawra = parseInt(btn.getAttribute('data-dawra')) || currentDawra;
             examModalFinalMode = true;
             showExamModal(null);

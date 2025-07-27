@@ -246,7 +246,10 @@
     <div class="alert alert-danger text-center mt-5" role="alert" style="font-size:1.3rem;">
         {{ error_message }}
     </div>
-    {% else %}
+    {% endif %}
+    <div id="general-announcement-area" style="max-width:900px;margin:0 auto 15px auto;">
+      <div class="alert alert-info text-center" id="announcement-content">تحميل الإعلان...</div>
+    </div>
     <div class="d-flex justify-content-between align-items-center mb-4" style="padding-top: 24px;">
         <div class="text-start" style="min-width:120px;">
             <a href="/logout" class="btn btn-danger btn-sm" style="font-weight:bold; min-width:100px;">تسجيل الخروج</a>
@@ -263,7 +266,6 @@
     <div class="star star1"></div>
     <div class="star star2"></div>
     <div class="star star3"></div>
-    {% endif %}
     <div class="student-card">
         <h3 class="mb-2 text-center" style="color:#1769aa; font-weight:700;">
                      {% if student_name %}
@@ -904,6 +906,21 @@ document.getElementById('super-badges-notes-meta-info').textContent = metaText;
         }
       };
     });
+      // Fetch and display the current announcement
+      fetch('/api/announcements')
+        .then(r => r.json())
+        .then(data => {
+          const area = document.getElementById('announcement-content');
+          const ann = data.announcement;
+          if (ann && ann.text) {
+            area.innerHTML = `<div style='font-size:1.1em;'><b>إعلان عام:</b><br>${ann.text}</div><div style='font-size:0.95em;color:#666;'>ساري حتى: ${ann.expiry ? ann.expiry.replace('T', ' ') : ''}</div>`;
+          } else {
+            area.innerHTML = '<span>لا يوجد إعلان عام حالياً</span>';
+          }
+        })
+        .catch(() => {
+          document.getElementById('announcement-content').innerHTML = '<span>تعذر تحميل الإعلان العام</span>';
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>

@@ -220,6 +220,85 @@
         <h1 style="font-size:2.1rem; font-weight:bold; margin-bottom:0;">{{ school_info.name }}</h1>
     </div>
     <div class="dashboard-section">
+  <div id="general-announcement-area">
+    <div class="alert alert-info text-center" id="announcement-content">تحميل الإعلان...</div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Fetch and display the current announcement
+      fetch('/api/announcements')
+        .then(r => r.json())
+        .then(data => {
+          const area = document.getElementById('announcement-content');
+          const ann = data.announcement;
+          if (ann && ann.text) {
+            area.innerHTML = `<div style='font-size:1.1em;'><b>إعلان عام:</b><br>${ann.text}</div><div style='font-size:0.95em;color:#666;'>ساري حتى: ${ann.expiry ? ann.expiry.replace('T', ' ') : ''}</div>`;
+          } else {
+            area.innerHTML = '<span>لا يوجد إعلان عام حالياً</span>';
+          }
+        })
+        .catch(() => {
+          document.getElementById('announcement-content').innerHTML = '<span>تعذر تحميل الإعلان العام</span>';
+        });
+
+      // Announcement modal logic (for admins)
+      const openAnnouncementBtn = document.getElementById('open-announcement-modal-btn');
+      if (openAnnouncementBtn) {
+        openAnnouncementBtn.addEventListener('click', function() {
+          // Pre-fill modal fields with current announcement
+          fetch('/api/announcements')
+            .then(r => r.json())
+            .then(data => {
+              const ann = data.announcement;
+              document.getElementById('announcement-text').value = ann && ann.text ? ann.text : '';
+              document.getElementById('announcement-expiry').value = ann && ann.expiry ? ann.expiry : '';
+            });
+          const modal = new bootstrap.Modal(document.getElementById('generalAnnouncementModal'));
+          modal.show();
+        });
+      }
+      const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
+      if (saveAnnouncementBtn) {
+        saveAnnouncementBtn.addEventListener('click', function() {
+          const text = document.getElementById('announcement-text').value;
+          const expiry = document.getElementById('announcement-expiry').value;
+          if (!text.trim() || !expiry) {
+            alert('يرجى إدخال نص الإعلان وتاريخ الانتهاء.');
+            return;
+          }
+          fetch('/api/announcements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, expiry })
+          }).then(r => r.json()).then(resp => {
+            if (resp.success) {
+              alert('تم حفظ الإعلان بنجاح');
+              document.getElementById('announcement-text').value = '';
+              document.getElementById('announcement-expiry').value = '';
+              const modal = bootstrap.Modal.getInstance(document.getElementById('generalAnnouncementModal'));
+              if (modal) modal.hide();
+              // Refresh announcement display
+              fetch('/api/announcements')
+                .then(r => r.json())
+                .then(data => {
+                  const area = document.getElementById('announcement-content');
+                  const ann = data.announcement;
+                  if (ann && ann.text) {
+                    area.innerHTML = `<div style='font-size:1.1em;'><b>إعلان عام:</b><br>${ann.text}</div><div style='font-size:0.95em;color:#666;'>ساري حتى: ${ann.expiry ? ann.expiry.replace('T', ' ') : ''}</div>`;
+                  } else {
+                    area.innerHTML = '<span>لا يوجد إعلان عام حالياً</span>';
+                  }
+                });
+            } else {
+              alert(resp.error || 'حدث خطأ أثناء الحفظ');
+            }
+          }).catch(() => {
+            alert('حدث خطأ في الاتصال بالخادم');
+          });
+        });
+      }
+    });
+  </script>
         <h2 class="mb-3">لوحة التحكم ({{ username }}, {{ role }})</h2>
     <a href="/logout" class="btn btn-secondary mb-4">خروج</a>
         {% if role == 'super_admin' %}
@@ -425,6 +504,10 @@
           </div>
           <!-- Other Settings Tab -->
           <div class="tab-pane fade" id="other-settings" role="tabpanel">
+  {% if role in ['super_admin', 'local_admin'] %}
+    <button class="btn btn-warning mb-3 w-100" id="open-announcement-modal-btn">إرسال إعلان عام</button>
+    {% include 'announcement-modal.html' %}
+  {% endif %}
             <a href="/super_badges" class="btn btn-warning mb-3 w-100">شارات مميزة</a>
             <a href="/manage_local_admins" class="btn btn-warning mb-3 w-100">إدارة المدراء المحليين</a>
 <a href="/school_info" class="btn btn-warning mb-3 w-100">معلومات المدرسة</a>
@@ -1726,19 +1809,22 @@ function attachStudentCardHandlers() {
           <div class='card card-body bg-light'>
             <div class='row g-2 align-items-center'>
               <div class='col-md-6'>
-                <label class='form-label'>البريد الإلكتروني / اسم المستخدم</label>
-                <input class='form-control details-email-username' value='${s.email || ''}'>
+                <label class='form-label'>رقم الطالب</label>
+                <input class='form-control details-student-id' value='${s.id}' readonly style='background:#f3f3f3; font-weight:bold; color:#555;'>
               </div>
               <div class='col-md-6'>
                 <label class='form-label'>اسم الطالب</label>
                 <input class='form-control details-name' value='${s.name || ''}'>
               </div>
-            </div>
-            <div class='row g-2 align-items-center mt-1'>
+              <div class='col-md-6'>
+                <label class='form-label'>البريد الإلكتروني / اسم المستخدم</label>
+                <input class='form-control details-email-username' value='${s.email || ''}'>
+              </div>
               <div class='col-md-6'>
                 <label class='form-label'>البريد الإلكتروني الثانوي</label>
                 <input class='form-control details-secondary-email' value='${s.secondary_email || ''}'>
               </div>
+            </div>
             <div class='row g-2 align-items-center mt-1'>
               <div class='col-md-6'>
                 <label class='form-label'>كلمة المرور (للمستخدم الجديد فقط أو لإعادة التعيين)</label>
@@ -1746,11 +1832,22 @@ function attachStudentCardHandlers() {
               </div>
             </div>
             <div class='row g-2 align-items-center mt-1'>
-              <div class='col-md-6'>
+              <div class='col-md-4'>
                 <label class='form-label'>تاريخ الميلاد</label>
                 <input type='date' class='form-control details-dob' value='${s.date_of_birth || ''}'>
               </div>
-              <div class='col-md-6'>
+              <div class='col-md-4'>
+                <label class='form-label'>العمر</label>
+                <input class='form-control details-age' value='' readonly style='background:#f3f3f3; font-weight:bold; color:#555;'>
+              </div>
+              <div class='col-md-4'>
+                <label class='form-label'>الجنس</label>
+                <div>
+                  <input type='radio' id='sex-male-${studentId}' name='sex-${studentId}' class='details-sex' value='male' ${((s.sex || '').toLowerCase() === 'male') ? 'checked' : ''}> <label for='sex-male-${studentId}'>ذكر</label>
+                  <input type='radio' id='sex-female-${studentId}' name='sex-${studentId}' class='details-sex' value='female' ${((s.sex || '').toLowerCase() === 'female') ? 'checked' : ''}> <label for='sex-female-${studentId}'>أنثى</label>
+                </div>
+              </div>
+              <div class='col-md-6 mt-2'>
                 <label class='form-label'>رقم الهاتف</label>
                 <input class='form-control details-phone' value='${s.phone || ''}'>
               </div>
@@ -1771,9 +1868,34 @@ function attachStudentCardHandlers() {
             </div>
           </div>
         `;
+        // Calculate and display age based on date of birth
+        const dobInput = studentRow.querySelector('.details-dob');
+        const ageInput = studentRow.querySelector('.details-age');
+        function calculateAndDisplayAge() {
+  const dob = dobInput.value;
+  let debugAge = '';
+  if (dob) {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    debugAge = age >= 0 ? age : '';
+    ageInput.value = debugAge;
+  } else {
+    ageInput.value = '';
+    debugAge = '';
+  }
+  console.log('[DEBUG][CARD] Student:', s.name, '| DOB:', dob, '| Age:', debugAge);
+}
+        dobInput.addEventListener('input', calculateAndDisplayAge);
+        calculateAndDisplayAge();
         // Save handler
         studentRow.querySelector('.save-details-btn').onclick = async function() {
           const emailUsernameValue = studentRow.querySelector('.details-email-username').value.trim();
+          const sexValue = studentRow.querySelector('input.details-sex:checked') ? studentRow.querySelector('input.details-sex:checked').value : '';
           const updated = {
             name: studentRow.querySelector('.details-name').value.trim(),
             username: emailUsernameValue,
@@ -1783,6 +1905,7 @@ function attachStudentCardHandlers() {
             phone: studentRow.querySelector('.details-phone').value.trim(),
             notes: studentRow.querySelector('.details-notes').value.trim(),
             alerts: studentRow.querySelector('.details-alerts').value.trim(),
+            sex: sexValue
           };
           // Always allow password reset if entered
           const passwordInputValue = studentRow.querySelector('.details-password').value;
@@ -1819,7 +1942,19 @@ function renderStudentCard(s) {
     <div class='student-card' data-id='${s.id}' data-username='${s.username || ''}' data-class-id='${s.class_id || ''}'>
       <div class='card-body d-flex flex-column flex-md-row align-items-center justify-content-between'>
         <div>
-          <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''}</span>
+          <span class='fw-bold student-name' style='font-size:1.1rem;'>${s.name || ''} <span style='color:#666;font-size:0.98em;'>(العمر: ${(function() {
+  let debugAge = '-';
+  if (s.date_of_birth) {
+    const dob = new Date(s.date_of_birth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) { age--; }
+    debugAge = age >= 0 ? age : '-';
+  }
+  console.log('[DEBUG][LIST] Student:', s.name, '| DOB:', s.date_of_birth, '| Age:', debugAge);
+  return debugAge;
+})()})</span>${(s.alerts && s.alerts.trim() !== '' ? `<span style='color:#d00;font-size:0.98em;font-weight:bold;margin-right:8px;'>تنبيهات</span>` : '')}</span>
         </div>
         <div class='student-actions mt-2 mt-md-0 d-flex flex-wrap gap-2'>
           <button class='btn btn-primary edit-student-btn' data-id='${s.id}'>تعديل</button>
@@ -1913,6 +2048,21 @@ function fetchAndRenderStudents() {
 
       fetchAndRenderStudents();
       function renderStudents(students, groupByClass) {
+    // Calculate age for each student if date_of_birth is present
+    students.forEach(function(s) {
+        if (s.date_of_birth) {
+            const dob = new Date(s.date_of_birth);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            s._calculated_age = age >= 0 ? age : '-';
+        } else {
+            s._calculated_age = '-';
+        }
+    });
     
     if (!Array.isArray(students)) students = [];
     let html = '';
@@ -2257,7 +2407,80 @@ let resp = await fetch(`/api/events/${window.currentClassId}`);
       toggleRecurrenceEndField();
 
       // Show delete button only in edit mode
-      document.getElementById('delete-event-btn').style.display = eventData.mode === 'edit' ? '' : 'none';
+      const deleteBtn = document.getElementById('delete-event-btn');
+      if (deleteBtn) {
+        // Remove previous handler to prevent stacking
+        deleteBtn.onclick = null;
+        if (eventData.mode === 'edit' && eventData.id) {
+          deleteBtn.style.display = '';
+          deleteBtn.onclick = async function() {
+            if (!confirm('هل أنت متأكد من حذف هذا الحدث؟')) return;
+            try {
+              const resp = await fetch(`/api/events/${eventData.id}`, { method: 'DELETE' });
+              const data = await resp.json();
+              if (data.success) {
+                modal.hide();
+                if (window.currentCalendar) window.currentCalendar.refetchEvents();
+              } else {
+                alert(data.error || 'خطأ أثناء حذف الحدث');
+              }
+            } catch (err) {
+              alert('خطأ في الاتصال بالخادم');
+            }
+          };
+        } else {
+          deleteBtn.style.display = 'none';
+        }
+      }
+      // Attach save handler
+      const saveBtn = document.getElementById('save-event-btn');
+      if (saveBtn) {
+        saveBtn.onclick = async function() {
+          // Collect data from modal fields
+          const id = document.getElementById('event-id').value;
+          const title = document.getElementById('event-title').value;
+          const description = document.getElementById('event-desc').value;
+          const start = document.getElementById('event-start').value;
+          const end = document.getElementById('event-end').value;
+          const color = document.getElementById('event-color').value;
+          const recurrence = document.getElementById('event-recurrence').value;
+          const recurrence_end = document.getElementById('event-recurrence-end').value;
+          const payload = {
+            title,
+            description,
+            start,
+            end,
+            color,
+            recurrence,
+            recurrence_end,
+            class_id: window.currentClassId
+          };
+          let url = '/api/events';
+          let method = 'POST';
+          if (eventData.mode === 'edit' && id) {
+            url = `/api/events/${id}`;
+            method = 'PUT';
+          }
+          try {
+            const resp = await fetch(url, {
+              method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.success) {
+              // Close modal
+              modal.hide();
+              // Refresh calendar events
+              if (window.currentCalendar) window.currentCalendar.refetchEvents();
+            } else {
+              alert(data.error || 'خطأ في حفظ الحدث');
+            }
+          } catch (err) {
+            alert('خطأ في الاتصال بالخادم');
+          }
+        };
+      }
       modal.show();
     }
 </script>

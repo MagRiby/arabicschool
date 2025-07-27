@@ -297,17 +297,7 @@ def ensure_student_grades_comment_metadata_columns():
 ensure_student_grades_comment_metadata_columns()
 
 # --- Auth Decorators ---
-def login_required(*roles):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if 'user_id' not in session:
-                return redirect(url_for('login'))
-            if session.get('role') not in roles:
-                return 'Unauthorized', 403
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+from auth_utils import login_required
 
 # --- User Registration/Login ---
 @app.route('/register_super_admin', methods=['GET', 'POST'])
@@ -413,6 +403,7 @@ def manage_local_admins():
 
 @app.route('/api/local_admins', methods=['GET'])
 @login_required('local_admin')
+@login_required()
 def api_list_local_admins():
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()
@@ -437,6 +428,7 @@ def set_local_admin_director(admin_id):
 
 @app.route('/api/local_admins', methods=['POST'])
 @login_required('local_admin')
+@login_required()
 def api_add_local_admin():
     data = request.get_json()
     username = data.get('username')
@@ -464,6 +456,7 @@ def api_add_local_admin():
 
 @app.route('/api/local_admins/<int:admin_id>', methods=['PUT'])
 @login_required('local_admin')
+@login_required()
 def api_edit_local_admin(admin_id):
     data = request.get_json()
     name = data.get('name')
@@ -487,6 +480,7 @@ def api_edit_local_admin(admin_id):
 
 @app.route('/api/local_admins/<int:admin_id>', methods=['DELETE'])
 @login_required('local_admin')
+@login_required()
 def api_delete_local_admin(admin_id):
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()
@@ -590,9 +584,9 @@ def create_event():
                 'recurrence_group_id': row[8],
                 'recurrence_end': row[9]
             }
-            return jsonify(event), 201
+            return jsonify({'success': True, 'event': event}), 201
         else:
-            return jsonify({'error': 'Event not found after creation'}), 500
+            return jsonify({'success': False, 'error': 'Event not found after creation'}), 500
     else:
         # Non-recurring event
         cursor = db.execute('INSERT INTO events (class_id, title, description, start, end, color, recurrence, recurrence_group_id, recurrence_end) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL)',
@@ -614,9 +608,9 @@ def create_event():
                 'recurrence_group_id': row[8],
                 'recurrence_end': row[9]
             }
-            return jsonify(event), 201
+            return jsonify({'success': True, 'event': event}), 201
         else:
-            return jsonify({'error': 'Event not found after creation'}), 500
+            return jsonify({'success': False, 'error': 'Event not found after creation'}), 500
 
 
 
@@ -653,6 +647,7 @@ def index():
 # --- User Management APIs ---
 
 @app.route('/api/check_user_exists', methods=['GET', 'POST'])
+@login_required()
 def api_check_user_exists():
     import sqlite3
     if request.method == 'POST':
@@ -930,7 +925,7 @@ def update_teacher(teacher_id):
 
 # --- Local Admin: Curriculum Groups/Items Management ---
 @app.route('/curriculum_groups', methods=['GET'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def list_curriculum_groups():
     level_id = request.args.get('level_id')
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
@@ -957,7 +952,7 @@ def add_curriculum_group():
     return jsonify({'success': True})
 
 @app.route('/curriculum_groups/<int:group_id>', methods=['DELETE', 'PUT'])
-@login_required('local_admin')
+@login_required('local_admin'  )
 def delete_curriculum_group(group_id):
     level_id = request.args.get('level_id')
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
@@ -980,7 +975,7 @@ def delete_curriculum_group(group_id):
         return jsonify({'success': True})
 
 @app.route('/curriculum_items/<int:group_id>', methods=['GET'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def list_curriculum_items(group_id):
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()
@@ -1535,7 +1530,7 @@ def get_students():
                      ORDER BY s.id DESC''', (teacher_id, teacher_id))
         rows = c.fetchall()
     else:
-        c.execute('''SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, c.id as class_id
+        c.execute('''SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, c.id as class_id, s.sex
                      FROM students s
                      LEFT JOIN users u ON s.email = u.username
                      LEFT JOIN classes c ON s.class_id = c.id
@@ -1553,7 +1548,8 @@ def get_students():
             'date_of_birth': row[7] or '',
             'secondary_email': row[8] or '',
             'class_name': row[9] or 'بدون صف',
-            'class_id': row[10]
+            'class_id': row[10],
+            'sex': row[11] or ''
         } for row in rows
     ]
     conn.close()
@@ -1577,7 +1573,7 @@ def search_students():
         teacher_id = session.get('teacher_id')
         if not query:
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, s.class_id, s.sex
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1587,7 +1583,7 @@ def search_students():
         else:
             like_query = f'%{query}%'
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, s.class_id, s.sex
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1599,7 +1595,7 @@ def search_students():
     else:
         if not query:
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, s.class_id, s.sex
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1608,7 +1604,7 @@ def search_students():
         else:
             like_query = f'%{query}%'
             c.execute('''
-                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, c.name as class_name, s.class_id
+                SELECT s.id, u.username as parent_username, s.name, s.email, s.phone, s.notes, s.alerts, s.date_of_birth, s.secondary_email, c.name as class_name, s.class_id, s.sex
                 FROM students s
                 LEFT JOIN users u ON s.email = u.username
                 LEFT JOIN classes c ON s.class_id = c.id
@@ -1624,8 +1620,11 @@ def search_students():
             'phone': row[4] or '',
             'notes': row[5] or '',
             'alerts': row[6] or '',
-            'class_name': row[7] or 'بدون صف',
-            'class_id': row[8]
+            'date_of_birth': row[7] or '',
+            'secondary_email': row[8] or '',
+            'class_name': row[9] or 'بدون صف',
+            'class_id': row[10],
+            'sex': row[11] or ''
         } for row in rows
     ]
     conn.close()
@@ -1737,6 +1736,9 @@ def update_student(student_id):
     if secondary_email is not None:
         updates.append('secondary_email = ?')
         params.append(secondary_email)
+    if 'sex' in data:
+        updates.append('sex = ?')
+        params.append(data['sex'])
     if updates:
         params.append(student_id)
         c.execute(f'UPDATE students SET {", ".join(updates)} WHERE id=?', params)
@@ -1834,12 +1836,13 @@ def list_students(class_id):
 def add_student(class_id):
     data = request.json
     name = data['name']
+    sex = data.get('sex')
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()
-    c.execute('INSERT INTO students (name, class_id) VALUES (?, ?)', (name, class_id))
+    c.execute('INSERT INTO students (name, class_id, sex) VALUES (?, ?, ?)', (name, class_id, sex))
     conn.commit()
     # Now fetch the updated list
-    c.execute('''SELECT u.id, u.username, s.name, s.email, s.phone, s.notes, s.alerts
+    c.execute('''SELECT u.id, u.username, s.name, s.email, s.phone, s.notes, s.alerts, s.sex
                  FROM users u LEFT JOIN students s ON u.id = s.id
                  WHERE u.role="student" AND s.class_id=?''', (class_id,))
     students = [
@@ -1850,7 +1853,8 @@ def add_student(class_id):
             'email': row[3] or '',
             'phone': row[4] or '',
             'notes': row[5] or '',
-            'alerts': row[6] or ''
+            'alerts': row[6] or '',
+            'sex': row[7] or ''
         } for row in c.fetchall()
     ]
     conn.close()
@@ -2133,12 +2137,14 @@ def delete_homework(homework_id):
     return jsonify({'success': True})
 
 @app.route('/uploads/class_<int:class_id>/<filename>')
+@login_required()
 def uploaded_file(class_id, filename):
     import os
     upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], f'class_{class_id}')
     return send_from_directory(upload_folder, filename)
 
 @app.route('/api/homework', methods=['POST'])
+@login_required()
 def upload_homework():
     due_date = request.form.get('due_date')
     description = request.form.get('description')
@@ -2308,7 +2314,7 @@ def list_exams(class_id):
     return jsonify({'exams': exams})
 
 @app.route('/api/exams/<int:class_id>', methods=['POST'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def add_exam(class_id):
     data = request.get_json()
     name = data.get('name')
@@ -2334,7 +2340,7 @@ def add_exam(class_id):
     return jsonify({'id': exam_id, 'name': name, 'status': status, 'curriculum_group_id': curriculum_group_id, 'is_final': is_final, 'weight': weight, 'dawra': dawra_to_save, 'is_year_final': is_year_final})
 
 @app.route('/api/exams/<int:exam_id>', methods=['PUT'])
-@login_required('local_admin')
+@login_required('local_admin', 'teacher')
 def edit_exam(exam_id):
     data = request.get_json()
     name = data.get('name')
@@ -2370,7 +2376,7 @@ def edit_exam(exam_id):
     return jsonify({'success': True})
 
 @app.route('/api/exams/<int:exam_id>', methods=['DELETE'])
-@login_required('local_admin')
+@login_required('local_admin','teacher')
 def delete_exam(exam_id):
     conn = sqlite3.connect('ArabicSchool.db')
     c = conn.cursor()
@@ -2601,6 +2607,7 @@ def list_support_material(level_id):
     return jsonify(files)
 
 @app.route('/support_material/<filename>')
+@login_required()
 def serve_support_material(filename):
     return send_from_directory(SUPPORT_MATERIAL_FOLDER, filename, as_attachment=False)
 
@@ -2696,6 +2703,49 @@ import json
 import os
 from flask import request, redirect, url_for, flash
 
+# --- General Announcements API ---
+from flask import abort
+ANNOUNCEMENTS_FILE = os.path.join(os.path.dirname(__file__), 'announcements.json')
+
+def load_announcement():
+    if not os.path.exists(ANNOUNCEMENTS_FILE):
+        return None
+    with open(ANNOUNCEMENTS_FILE, 'r', encoding='utf-8') as f:
+        try:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data[-1] if data else None
+            return data if data else None
+        except Exception:
+            return None
+
+def save_announcement(announcement):
+    with open(ANNOUNCEMENTS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(announcement if announcement else {}, f, ensure_ascii=False, indent=2)
+
+@app.route('/api/announcements', methods=['GET'])
+def api_get_announcement():
+    ann = load_announcement()
+    return jsonify({'announcement': ann} if ann else {'announcement': None})
+
+@app.route('/api/announcements', methods=['POST'])
+def api_post_announcement():
+    if 'role' not in session or session['role'] not in ['super_admin', 'local_admin']:
+        abort(403)
+    data = request.get_json(force=True)
+    text = data.get('text', '').strip()
+    expiry = data.get('expiry')
+    if not text or not expiry:
+        return jsonify({'success': False, 'error': 'Missing text or expiry'}), 400
+    announcement = {
+        'text': text,
+        'expiry': expiry,
+        'created_at': datetime.now().isoformat(),
+        'author': session.get('username', 'unknown')
+    }
+    save_announcement(announcement)
+    return jsonify({'success': True})
+
 @app.route('/school_info', methods=['GET', 'POST'])
 def school_info():
     info_path = os.path.join(os.path.dirname(__file__), 'school_info.json')
@@ -2712,9 +2762,7 @@ def school_info():
         school_info['address'] = request.form.get('address', '')
         school_info['contact'] = request.form.get('contact', '')
         school_info['email'] = request.form.get('email', '')
-        school_info['principal_name'] = request.form.get('principal_name', '')
-        school_info['principal_work_phone'] = request.form.get('principal_work_phone', '')
-        school_info['principal_work_email'] = request.form.get('principal_work_email', '')
+
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             logo_filename = 'school_logo' + os.path.splitext(logo_file.filename)[-1]
@@ -2864,6 +2912,7 @@ def calculate_student_subject_summary(student, exams, grades):
     return summary
 
 @app.route('/api/score_card/<int:student_id>')
+@login_required()
 def api_score_card(student_id):
     conn = sqlite3.connect('ArabicSchool.db', timeout=10, check_same_thread=False)
     c = conn.cursor()

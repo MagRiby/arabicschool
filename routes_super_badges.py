@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify
+from auth_utils import login_required
 from models import db, SuperBadge
 import uuid
 import sqlite3
@@ -34,6 +35,7 @@ def super_badges_page():
 
 # --- NEW ENDPOINT: Get all super badges for a student, with active status ---
 @super_badges_bp.route('/api/student/<int:student_id>/super_badges', methods=['GET'])
+@login_required()
 def get_student_super_badges(student_id):
     print(f"[DEBUG] /api/student/{student_id}/super_badges endpoint HIT for student_id={student_id}")
     conn = sqlite3.connect('ArabicSchool.db')
@@ -73,6 +75,7 @@ def get_student_super_badges(student_id):
 
 # --- NEW ENDPOINT: Toggle a super badge for a student ---
 @super_badges_bp.route('/api/student/<int:student_id>/super_badges/<badge_id>/toggle', methods=['POST'])
+@login_required()
 def toggle_student_super_badge(student_id, badge_id):
     conn = sqlite3.connect('ArabicSchool.db')
     c = conn.cursor()
@@ -139,6 +142,7 @@ from flask import session
 from datetime import datetime
 
 @super_badges_bp.route('/api/student/<int:student_id>/super_badges/notes', methods=['GET'])
+@login_required()
 def get_super_badges_notes(student_id):
     conn = sqlite3.connect('ArabicSchool.db')
     c = conn.cursor()
@@ -169,6 +173,7 @@ def get_super_badges_notes(student_id):
     return jsonify({'note': row[0] if row else '', 'updated_at': row[1] if row else '', 'user': display_name})
 
 @super_badges_bp.route('/api/student/<int:student_id>/super_badges/notes', methods=['POST'])
+@login_required()
 def save_super_badges_notes(student_id):
     from flask import session
     from datetime import datetime
